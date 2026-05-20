@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HabitFlow — Трекер привычек</title>
+
+    <!-- Tailwind CSS через CDN — не нужен build-шаг для стилей -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: { DEFAULT: '#6366f1', light: '#eef2ff', dark: '#4f46e5' }
+            }
+          }
+        }
+      }
+    </script>
+
+    <style>
+      /* Убираем скроллбар сайдбара, кастомизируем глобальный */
+      ::-webkit-scrollbar { width: 4px; }
+      ::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 4px; }
+      body { background: #f8fafc; }
+    </style>
+    <script type="module" crossorigin src="/assets/index-BkJ1h1T9.js"></script>
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
