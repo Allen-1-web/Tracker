@@ -1,0 +1,27 @@
+# Frontend (Next.js)
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/build/
+frontend/.env*
+frontend/.vercel
+frontend/*.tsbuildinfo
+frontend/next-env.d.ts
+
+# Legacy Vite (local deps)
+vite-legacy/node_modules/
+
+# OS / editors
+.DS_Store
+*.pem
+Thumbs.db
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Local SQL (secrets / personal bootstrap)
+backend/supabase/scripts/*.local.sql
+**/*.local.sql
