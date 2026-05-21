@@ -3,7 +3,9 @@ frontend/node_modules/
 frontend/.next/
 frontend/out/
 frontend/build/
-frontend/.env*
+frontend/.env
+frontend/.env.local
+frontend/.env.*.local
 frontend/.vercel
 frontend/*.tsbuildinfo
 frontend/next-env.d.ts
