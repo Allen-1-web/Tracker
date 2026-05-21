@@ -21,7 +21,21 @@ npm run dev
 
 ## Git
 
-Один репозиторий — коммит из корня:
+Один репозиторий — коммит **только из корня** `Tracker` (не из подпапки без Git).
+
+### Cursor / VS Code
+
+1. **File → Open Folder** → выберите `C:\Users\Дмитрий\Tracker` (корень, где лежат `frontend/` и `backend/`).
+2. Сохраните файлы (`Ctrl+S`).
+3. Боковая панель **Source Control** (иконка ветки) или `Ctrl+Shift+G`.
+4. Если видите изменения — кнопка **+** у «Changes» (Stage All) или галочка у каждого файла.
+5. Введите сообщение коммита сверху → **Commit** (галочка).
+
+Если кнопка Commit неактивна: пустое сообщение, нет сохранённых изменений или открыта не та папка.
+
+В `.vscode/settings.json` включён **Smart Commit**: при коммите без stage подхватываются все изменения, включая новые файлы.
+
+### Терминал
 
 ```bash
 git add -A
@@ -29,3 +43,13 @@ git status
 git commit -m "описание"
 git push
 ```
+
+### «Nothing to commit»
+
+- Нет несохранённых правок, или
+- Правки только в игнорируемых файлах (`.env.local`, `frontend/node_modules`, `frontend/.next`).
+
+### Не попадут в коммит (это нормально)
+
+- `frontend/.env.local`, `frontend/node_modules/`, `frontend/.next/`
+- `**/*.local.sql`
