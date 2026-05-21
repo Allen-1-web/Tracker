@@ -1,0 +1,26 @@
+-- Шаблон: подтверждение email и роль admin для одного пользователя.
+-- 1) Скопируйте в bootstrap-admin.local.sql (файл *.local.sql не коммитится)
+-- 2) Замените YOUR_ADMIN_EMAIL на email зарегистрированного пользователя
+-- 3) Supabase Dashboard → SQL → Run
+
+-- При ошибке "cannot change role" раскомментируйте disable/enable trigger ниже.
+
+-- alter table public.profiles disable trigger profiles_role_guard;
+
+update auth.users
+set
+  email_confirmed_at = coalesce(email_confirmed_at, now()),
+  confirmed_at = coalesce(confirmed_at, now()),
+  updated_at = now()
+where email = 'YOUR_ADMIN_EMAIL';
+
+update public.profiles
+set role = 'admin', updated_at = now()
+where email = 'YOUR_ADMIN_EMAIL';
+
+-- alter table public.profiles enable trigger profiles_role_guard;
+
+select u.id, u.email, u.email_confirmed_at, p.role, p.name
+from auth.users u
+left join public.profiles p on p.id = u.id
+where u.email = 'YOUR_ADMIN_EMAIL';

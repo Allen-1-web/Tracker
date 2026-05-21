@@ -1,0 +1,4 @@
+# Локальные setup-скрипты с реальными email/секретами — не в git
+*.local.sql
+confirm-admin-*.sql
+!*.example.sql
