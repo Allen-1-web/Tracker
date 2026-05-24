@@ -3,8 +3,8 @@ import { AuthBootstrap } from '@/components/providers/auth-bootstrap'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Трекер целей и привычек',
-  description: 'Привычки, цели, питание',
+  title: 'Tracker — ежедневные привычки',
+  description: 'Tracker помогает держать ежедневные привычки. Веб-приложение и Telegram companion.',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

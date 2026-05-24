@@ -152,7 +152,7 @@ export default function OnboardingPage() {
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--primary)]">
             <Zap className="h-6 w-6 text-white" />
           </div>
-          <span className="text-xl font-bold">HabitFlow</span>
+          <span className="text-xl font-bold">Tracker</span>
         </div>
 
         {/* Step indicator */}
@@ -366,7 +366,7 @@ export default function OnboardingPage() {
                 <p className="text-sm font-semibold">Инструкция:</p>
                 <ol className="text-sm text-[var(--muted-foreground)] space-y-2 list-decimal ml-4">
                   <li>Откройте Telegram</li>
-                  <li>Найдите бота <strong className="text-[var(--foreground)]">@HabitFlowBot</strong></li>
+                  <li>Найдите бота <strong className="text-[var(--foreground)]">@{process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME || 'your_bot'}</strong></li>
                   <li>Нажмите <strong className="text-[var(--foreground)]">Start</strong></li>
                   <li>Введите команду <code className="bg-[var(--background)] border border-[var(--border)] px-1.5 py-0.5 rounded text-xs">/connect</code></li>
                 </ol>

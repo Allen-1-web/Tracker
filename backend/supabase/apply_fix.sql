@@ -42,6 +42,42 @@ create table if not exists public.habits (
   is_archived boolean not null default false
 );
 
+-- legacy habit_logs (id, task_id, completed_at) → log_date/completed
+do $$
+begin
+  if exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public' and table_name = 'habit_logs' and column_name = 'completed_at'
+  ) and not exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public' and table_name = 'habit_logs' and column_name = 'log_date'
+  ) then
+    create table public.habit_logs_new (
+      habit_id uuid not null references public.habits (id) on delete cascade,
+      user_id uuid not null references auth.users (id) on delete cascade,
+      log_date date not null,
+      completed boolean not null default true,
+      primary key (habit_id, log_date)
+    );
+
+    insert into public.habit_logs_new (habit_id, user_id, log_date, completed)
+    select distinct on (hl.habit_id, hl.user_id, (hl.completed_at at time zone 'UTC')::date)
+      hl.habit_id,
+      hl.user_id,
+      (hl.completed_at at time zone 'UTC')::date,
+      true
+    from public.habit_logs hl
+    where hl.habit_id is not null
+      and hl.completed_at is not null
+      and exists (select 1 from public.habits h where h.id = hl.habit_id)
+    order by hl.habit_id, hl.user_id, (hl.completed_at at time zone 'UTC')::date, hl.completed_at desc;
+
+    drop table public.habit_logs cascade;
+    alter table public.habit_logs_new rename to habit_logs;
+    alter table public.habit_logs enable row level security;
+  end if;
+end $$;
+
 create table if not exists public.habit_logs (
   habit_id uuid not null references public.habits (id) on delete cascade,
   user_id uuid not null references auth.users (id) on delete cascade,

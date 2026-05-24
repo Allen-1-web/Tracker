@@ -80,6 +80,38 @@ export interface HabitStats {
   totalCompleted: number
 }
 
+export interface DayCompletion {
+  date: string
+  completed: number
+  total: number
+  pct: number
+}
+
+export interface GlobalHabitStats {
+  activeHabits: number
+  perfectDayStreak: number
+  bestHabitStreak: number
+  completionRate7: number
+  completionRate30: number
+  completionRate90: number
+}
+
+export interface HabitRankEntry {
+  habitId: string
+  rate: number
+}
+
+export interface HabitRecap {
+  period: 'week' | 'month'
+  completionRate: number
+  previousCompletionRate: number
+  delta: number
+  perfectDays: number
+  activeDays: number
+  topHabits: HabitRankEntry[]
+  weakHabits: HabitRankEntry[]
+}
+
 // ─── Nutrition / КБЖУ ────────────────────────────────────────────────────────
 
 export type FoodCategory =

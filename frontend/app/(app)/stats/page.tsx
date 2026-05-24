@@ -1,6 +1,12 @@
-import { redirect } from 'next/navigation'
+'use client'
 
-/** Расширенная аналитика убрана с раннего этапа — дневной прогресс на /dashboard */
+import { AppLayout } from '@/components/layout/app-layout'
+import { StatsDashboard } from '@/components/stats/stats-dashboard'
+
 export default function StatsPage() {
-  redirect('/dashboard')
+  return (
+    <AppLayout title="Аналитика">
+      <StatsDashboard />
+    </AppLayout>
+  )
 }

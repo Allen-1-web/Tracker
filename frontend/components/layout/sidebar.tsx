@@ -9,12 +9,14 @@ import {
   Settings,
   Zap,
   UtensilsCrossed,
+  BarChart2,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const navItems = [
   { href: '/dashboard', label: 'Дашборд', icon: LayoutDashboard },
   { href: '/habits', label: 'Привычки', icon: CheckSquare },
+  { href: '/stats', label: 'Аналитика', icon: BarChart2 },
   { href: '/goals', label: 'Цели', icon: Target },
   { href: '/nutrition', label: 'Питание', icon: UtensilsCrossed },
   { href: '/settings', label: 'Настройки', icon: Settings },
@@ -56,8 +58,8 @@ function SidebarBrand() {
         <Zap className="h-5 w-5 text-white" />
       </div>
       <div>
-        <p className="font-bold text-[var(--foreground)] leading-none">HabitFlow</p>
-        <p className="text-xs text-[var(--muted-foreground)] mt-0.5">Трекер привычек</p>
+        <p className="font-bold text-[var(--foreground)] leading-none">Tracker</p>
+        <p className="text-xs text-[var(--muted-foreground)] mt-0.5">Ежедневные привычки</p>
       </div>
     </div>
   )

@@ -10,10 +10,12 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Switch } from '@/components/ui/switch'
 import { ConfirmDialog } from '@/components/shared/confirm-dialog'
 import { EmptyState } from '@/components/shared/empty-state'
 import { TelegramConnect } from '@/components/settings/telegram-connect'
+import { NotificationPreferencesPanel } from '@/components/settings/notification-preferences'
+import { ReminderSchedulesPanel } from '@/components/settings/reminder-schedules'
+import { TelegramPreferencesPanel } from '@/components/settings/telegram-preferences'
 import { useStore } from '@/lib/store'
 import type { Category } from '@/lib/types'
 import { formFieldErrorClass, cn } from '@/lib/utils'
@@ -138,34 +140,28 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
 
-        {/* Notifications */}
+        {/* Notifications & reminders */}
         <Card>
           <CardHeader>
-            <CardTitle>Уведомления</CardTitle>
-            <CardDescription>Настройте напоминания о привычках</CardDescription>
+            <CardTitle>Уведомления Telegram</CardTitle>
+            <CardDescription>
+              Сводки, напоминания и типы уведомлений — синхронизируются с ботом
+            </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium">Ежедневные напоминания</p>
-                <p className="text-xs text-[var(--muted-foreground)]">Получать напоминания в указанное время</p>
-              </div>
-              <Switch
-                checked={user.remindersEnabled}
-                onCheckedChange={(checked) => void updateUser({ remindersEnabled: checked })}
-              />
-            </div>
-            {user.remindersEnabled && (
-              <div className="space-y-1.5">
-                <Label>Время напоминания</Label>
-                <Input
-                  type="time"
-                  defaultValue={user.reminderTime ?? '09:00'}
-                  onBlur={(e) => void updateUser({ reminderTime: e.target.value })}
-                  className="w-36"
-                />
-              </div>
-            )}
+          <CardContent>
+            <NotificationPreferencesPanel />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Расписание напоминаний</CardTitle>
+            <CardDescription>
+              Ежедневные сообщения в Telegram в заданное время (нужен запущенный worker)
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ReminderSchedulesPanel />
           </CardContent>
         </Card>
 
@@ -177,8 +173,9 @@ export default function SettingsPage() {
               Получайте напоминания и управляйте трекером прямо из Telegram.
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-0">
             <TelegramConnect />
+            <TelegramPreferencesPanel />
           </CardContent>
         </Card>
 
