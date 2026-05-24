@@ -13,6 +13,7 @@ import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { ConfirmDialog } from '@/components/shared/confirm-dialog'
 import { EmptyState } from '@/components/shared/empty-state'
+import { TelegramConnect } from '@/components/settings/telegram-connect'
 import { useStore } from '@/lib/store'
 import type { Category } from '@/lib/types'
 import { formFieldErrorClass, cn } from '@/lib/utils'
@@ -172,43 +173,12 @@ export default function SettingsPage() {
         <Card>
           <CardHeader>
             <CardTitle>Telegram-бот</CardTitle>
-            <CardDescription>Получайте напоминания в Telegram</CardDescription>
+            <CardDescription>
+              Получайте напоминания и управляйте трекером прямо из Telegram.
+            </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            {user.telegramConnected ? (
-              <div className="flex items-center justify-between rounded-lg border border-green-200 bg-green-50 p-4">
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl">✅</span>
-                  <div>
-                    <p className="text-sm font-medium text-green-800">Telegram подключён</p>
-                    {user.telegramUsername && (
-                      <p className="text-xs text-green-600">@{user.telegramUsername}</p>
-                    )}
-                  </div>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => void updateUser({ telegramConnected: false })}
-                >
-                  Отключить
-                </Button>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                <div className="rounded-lg border border-[var(--border)] bg-[var(--muted)]/50 p-4 space-y-2">
-                  <p className="text-sm font-medium">Как подключить бота:</p>
-                  <ol className="text-sm text-[var(--muted-foreground)] space-y-1 list-decimal ml-4">
-                    <li>Откройте Telegram и найдите <strong>@HabitFlowBot</strong></li>
-                    <li>Нажмите <strong>Start</strong> или отправьте команду <code className="bg-[var(--muted)] px-1 rounded">/start</code></li>
-                    <li>Перейдите по ссылке или скопируйте код авторизации</li>
-                  </ol>
-                </div>
-                <Button onClick={() => void updateUser({ telegramConnected: true, telegramUsername: 'user' })}>
-                  Подключить Telegram
-                </Button>
-              </div>
-            )}
+          <CardContent>
+            <TelegramConnect />
           </CardContent>
         </Card>
 

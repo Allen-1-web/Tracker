@@ -305,6 +305,213 @@ export type Database = {
         Update: Record<string, never>
         Relationships: []
       }
+      telegram_users: {
+        Row: {
+          user_id: string
+          telegram_chat_id: number
+          telegram_user_id: number
+          username: string | null
+          first_name: string | null
+          last_name: string | null
+          language_code: string | null
+          timezone: string
+          quiet_hours_start: string | null
+          quiet_hours_end: string | null
+          is_blocked: boolean
+          linked_at: string
+          last_seen_at: string | null
+        }
+        Insert: {
+          user_id: string
+          telegram_chat_id: number
+          telegram_user_id: number
+          username?: string | null
+          first_name?: string | null
+          last_name?: string | null
+          language_code?: string | null
+          timezone?: string
+          quiet_hours_start?: string | null
+          quiet_hours_end?: string | null
+          is_blocked?: boolean
+          linked_at?: string
+          last_seen_at?: string | null
+        }
+        Update: {
+          telegram_chat_id?: number
+          username?: string | null
+          first_name?: string | null
+          last_name?: string | null
+          language_code?: string | null
+          timezone?: string
+          quiet_hours_start?: string | null
+          quiet_hours_end?: string | null
+          is_blocked?: boolean
+          last_seen_at?: string | null
+        }
+        Relationships: []
+      }
+      telegram_link_tokens: {
+        Row: {
+          token: string
+          user_id: string
+          expires_at: string
+          used_at: string | null
+          created_at: string
+        }
+        Insert: {
+          token: string
+          user_id: string
+          expires_at: string
+          used_at?: string | null
+          created_at?: string
+        }
+        Update: {
+          used_at?: string | null
+        }
+        Relationships: []
+      }
+      telegram_sessions: {
+        Row: {
+          chat_id: number
+          state: Json
+          updated_at: string
+        }
+        Insert: {
+          chat_id: number
+          state?: Json
+          updated_at?: string
+        }
+        Update: {
+          state?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      notification_preferences: {
+        Row: {
+          user_id: string
+          daily_summary: boolean
+          daily_summary_time: string
+          weekly_report: boolean
+          weekly_report_dow: number
+          weekly_report_time: string
+          hydration: boolean
+          hydration_interval_minutes: number
+          hydration_start_time: string
+          hydration_end_time: string
+          nutrition_reminders: boolean
+          habit_reminders: boolean
+          goal_deadline_reminders: boolean
+          missed_habit_alerts: boolean
+          updated_at: string
+        }
+        Insert: {
+          user_id: string
+          daily_summary?: boolean
+          daily_summary_time?: string
+          weekly_report?: boolean
+          weekly_report_dow?: number
+          weekly_report_time?: string
+          hydration?: boolean
+          hydration_interval_minutes?: number
+          hydration_start_time?: string
+          hydration_end_time?: string
+          nutrition_reminders?: boolean
+          habit_reminders?: boolean
+          goal_deadline_reminders?: boolean
+          missed_habit_alerts?: boolean
+          updated_at?: string
+        }
+        Update: {
+          daily_summary?: boolean
+          daily_summary_time?: string
+          weekly_report?: boolean
+          weekly_report_dow?: number
+          weekly_report_time?: string
+          hydration?: boolean
+          hydration_interval_minutes?: number
+          hydration_start_time?: string
+          hydration_end_time?: string
+          nutrition_reminders?: boolean
+          habit_reminders?: boolean
+          goal_deadline_reminders?: boolean
+          missed_habit_alerts?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      reminder_schedules: {
+        Row: {
+          id: string
+          user_id: string
+          kind: ReminderKind
+          ref_id: string | null
+          title: string
+          message: string | null
+          cron: string
+          timezone: string
+          enabled: boolean
+          next_run_at: string | null
+          last_run_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          kind: ReminderKind
+          ref_id?: string | null
+          title: string
+          message?: string | null
+          cron: string
+          timezone: string
+          enabled?: boolean
+          next_run_at?: string | null
+          last_run_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          kind?: ReminderKind
+          ref_id?: string | null
+          title?: string
+          message?: string | null
+          cron?: string
+          timezone?: string
+          enabled?: boolean
+          next_run_at?: string | null
+          last_run_at?: string | null
+        }
+        Relationships: []
+      }
+      notification_logs: {
+        Row: {
+          id: string
+          user_id: string
+          reminder_id: string | null
+          kind: string
+          channel: string
+          status: NotificationStatus
+          payload: Json | null
+          error: string | null
+          attempt: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          reminder_id?: string | null
+          kind: string
+          channel?: string
+          status: NotificationStatus
+          payload?: Json | null
+          error?: string | null
+          attempt?: number
+          created_at?: string
+        }
+        Update: Record<string, never>
+        Relationships: []
+      }
     }
     Views: Record<string, never>
     Functions: {
@@ -316,8 +523,29 @@ export type Database = {
         Args: Record<string, never>
         Returns: boolean
       }
+      ensure_notification_prefs: {
+        Args: { p_user_id: string }
+        Returns: undefined
+      }
     }
     Enums: Record<string, never>
     CompositeTypes: Record<string, never>
   }
 }
+
+export type ReminderKind =
+  | 'habit'
+  | 'goal'
+  | 'nutrition'
+  | 'water'
+  | 'sleep'
+  | 'workout'
+  | 'custom'
+
+export type NotificationStatus =
+  | 'queued'
+  | 'sent'
+  | 'failed'
+  | 'skipped_quiet_hours'
+  | 'skipped_disabled'
+  | 'skipped_blocked'

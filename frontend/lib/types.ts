@@ -127,3 +127,99 @@ export interface NutritionGoals {
   fat: number
   carbs: number
 }
+
+// ─── Telegram integration ────────────────────────────────────────────────────
+
+export type ReminderKind =
+  | 'habit'
+  | 'goal'
+  | 'nutrition'
+  | 'water'
+  | 'sleep'
+  | 'workout'
+  | 'custom'
+
+export type NotificationStatus =
+  | 'queued'
+  | 'sent'
+  | 'failed'
+  | 'skipped_quiet_hours'
+  | 'skipped_disabled'
+  | 'skipped_blocked'
+
+export interface TelegramUser {
+  userId: string
+  telegramChatId: number
+  telegramUserId: number
+  username: string | null
+  firstName: string | null
+  lastName: string | null
+  languageCode: string | null
+  /** IANA TZ name, e.g. 'Europe/Moscow' */
+  timezone: string
+  /** 'HH:mm:ss' or null */
+  quietHoursStart: string | null
+  quietHoursEnd: string | null
+  isBlocked: boolean
+  linkedAt: Date
+  lastSeenAt: Date | null
+}
+
+export interface ReminderSchedule {
+  id: string
+  userId: string
+  kind: ReminderKind
+  /** Linked entity (habit_id / goal_id) when applicable */
+  refId: string | null
+  title: string
+  message: string | null
+  /** Standard 5-field cron expression, in the user's timezone */
+  cron: string
+  timezone: string
+  enabled: boolean
+  nextRunAt: Date | null
+  lastRunAt: Date | null
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface NotificationPreferences {
+  userId: string
+  dailySummary: boolean
+  /** 'HH:mm' */
+  dailySummaryTime: string
+  weeklyReport: boolean
+  /** 0 = Sunday, 1 = Monday, ..., 6 = Saturday */
+  weeklyReportDow: number
+  /** 'HH:mm' */
+  weeklyReportTime: string
+  hydration: boolean
+  hydrationIntervalMinutes: number
+  hydrationStartTime: string
+  hydrationEndTime: string
+  nutritionReminders: boolean
+  habitReminders: boolean
+  goalDeadlineReminders: boolean
+  missedHabitAlerts: boolean
+  updatedAt: Date
+}
+
+export interface NotificationLog {
+  id: string
+  userId: string
+  reminderId: string | null
+  kind: string
+  channel: string
+  status: NotificationStatus
+  payload: unknown
+  error: string | null
+  attempt: number
+  createdAt: Date
+}
+
+/** Bot conversation state stored per chat. */
+export interface TelegramSessionState {
+  flow?: string
+  step?: string
+  payload?: Record<string, unknown>
+}
