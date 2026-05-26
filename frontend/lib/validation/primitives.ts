@@ -23,6 +23,17 @@ export const titleField = sanitizedString().pipe(
   z.string().min(3, 'Минимум 3 символа').max(120, 'Максимум 120 символов')
 )
 
+export const reminderTitleField = sanitizedString().pipe(
+  z.string().min(1, 'Укажите название').max(200, 'Максимум 200 символов')
+)
+
+export const reminderMessageField = sanitizedString()
+  .pipe(z.string().max(1000, 'Максимум 1000 символов'))
+  .optional()
+  .or(z.literal('').transform(() => undefined))
+
+export const reminderMessageNullableField = z.union([z.null(), reminderMessageField])
+
 export const optionalDescriptionField = z
   .union([z.string(), z.undefined()])
   .transform((v) => {

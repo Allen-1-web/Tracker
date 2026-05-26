@@ -1,6 +1,7 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import { getSupabaseAnonKey, getSupabaseUrl } from './env'
+import { SUPABASE_AUTH_REQUEST_TIMEOUT_MS, withTimeout } from './with-timeout'
 
 type CookieToSet = { name: string; value: string; options: CookieOptions }
 
@@ -47,9 +48,18 @@ export async function updateSession(request: NextRequest) {
     },
   })
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  let user: Awaited<ReturnType<typeof supabase.auth.getUser>>['data']['user'] = null
+  try {
+    const { data } = await withTimeout(
+      supabase.auth.getUser(),
+      SUPABASE_AUTH_REQUEST_TIMEOUT_MS,
+      'Превышено время ожидания проверки сессии.',
+    )
+    user = data.user
+  } catch {
+    // Supabase недоступен — не блокируем загрузку страницы; защищённые маршруты проверит клиент.
+    user = null
+  }
 
   const { pathname } = request.nextUrl
 

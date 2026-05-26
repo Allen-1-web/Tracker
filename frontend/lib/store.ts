@@ -18,12 +18,13 @@ import { requireSessionForMutation, requireAdmin } from './auth/guards'
 import { logSecurityEvent } from './auth/security-log'
 import { getSupabaseBrowserClient } from './supabase/client'
 import { fetchAdminProfiles, fetchUserAppData, type AdminProfileRow } from './supabase/maps'
+import { postAuthAction } from './auth/auth-api'
 import { applyClientApiError, finalizeClientApiError, redirectToLogin } from './auth/apply-api-error'
 import { toApiError, type ApiErrorResponse } from './errors/api-error'
-import { syncSessionAfterSignIn } from './supabase/session'
 import type { UserRole } from './auth/roles'
 import { insertWithCategoryFallback, isMissingCategoryIdColumn } from './supabase/category-write'
 import type { Database } from './supabase/database.types'
+import { withTimeout } from './supabase/with-timeout'
 import {
   applyValidationFailure,
   toLogDate,
@@ -43,14 +44,6 @@ type DataStatus = 'idle' | 'loading' | 'ready' | 'error'
 
 const SUPABASE_AUTH_TIMEOUT_MS = 30_000
 const SUPABASE_DATA_TIMEOUT_MS = 35_000
-
-function withTimeout<T>(promise: Promise<T>, ms: number, message: string): Promise<T> {
-  let timeoutId: ReturnType<typeof setTimeout>
-  const timeoutPromise = new Promise<never>((_, reject) => {
-    timeoutId = setTimeout(() => reject(new Error(message)), ms)
-  })
-  return Promise.race([promise, timeoutPromise]).finally(() => clearTimeout(timeoutId))
-}
 
 const defaultNutrition: NutritionGoals = {
   calories: 2200,
@@ -243,10 +236,18 @@ export const useStore = create<AppStore>((set, get) => ({
 
       const {
         data: { user: authUser },
-      } = await supabase.auth.getUser()
+      } = await withTimeout(
+        supabase.auth.getUser(),
+        SUPABASE_AUTH_TIMEOUT_MS,
+        'Превышено время ожидания проверки сессии. Проверьте интернет и SUPABASE_URL.',
+      )
       const session = authUser
         ? (
-            await supabase.auth.getSession()
+            await withTimeout(
+              supabase.auth.getSession(),
+              SUPABASE_AUTH_TIMEOUT_MS,
+              'Превышено время ожидания сессии.',
+            )
           ).data.session
         : null
       set({ session: session ?? null, authReady: true })
@@ -273,17 +274,23 @@ export const useStore = create<AppStore>((set, get) => ({
 
   signIn: async (email, password) => {
     try {
-      const supabase = getClient()
+      const normalizedEmail = email.trim().toLowerCase()
       const { data, error } = await withTimeout(
-        supabase.auth.signInWithPassword({ email, password }),
+        postAuthAction('/api/auth/sign-in', { email: normalizedEmail, password }),
         SUPABASE_AUTH_TIMEOUT_MS,
-        'Сервер входа не ответил вовремя. Проверьте интернет и что в .env.local указан верный SUPABASE_URL (без /rest/v1).'
+        'Сервер входа не ответил вовремя. Проверьте интернет и что в .env.local указан верный SUPABASE_URL (без /rest/v1).',
       )
       if (error) return { error: finalizeClientApiError(error) }
-      let session = data.session
-      if (session) {
-        session = (await syncSessionAfterSignIn(supabase, session)) ?? session
-      }
+      if (data?.needsEmailConfirmation) return { needsEmailConfirmation: true }
+
+      const supabase = getClient()
+      const {
+        data: { session },
+      } = await withTimeout(
+        supabase.auth.getSession(),
+        SUPABASE_AUTH_TIMEOUT_MS,
+        'Не удалось получить сессию после входа.',
+      )
       set({ session: session ?? null })
       if (session?.user) {
         await get().reloadAppData({ withLoading: true })
@@ -292,7 +299,7 @@ export const useStore = create<AppStore>((set, get) => ({
             error:
               get().dataError ??
               toApiError(
-                'Не удалось загрузить данные. Проверьте, что в Supabase выполнен ../backend/supabase/schema.sql.'
+                'Не удалось загрузить данные. Проверьте, что в Supabase выполнен ../backend/supabase/schema.sql.',
               ),
           }
         }
@@ -305,21 +312,28 @@ export const useStore = create<AppStore>((set, get) => ({
 
   signUp: async (name, email, password) => {
     try {
-      const supabase = getClient()
+      const normalizedEmail = email.trim().toLowerCase()
       const { data, error } = await withTimeout(
-        supabase.auth.signUp({
-          email,
+        postAuthAction('/api/auth/sign-up', {
+          name: name.trim(),
+          email: normalizedEmail,
           password,
-          options: { data: { full_name: name } },
         }),
         SUPABASE_AUTH_TIMEOUT_MS,
-        'Сервер регистрации не ответил вовремя. Проверьте интернет и SUPABASE_URL (без /rest/v1).'
+        'Сервер регистрации не ответил вовремя. Проверьте интернет и SUPABASE_URL (без /rest/v1).',
       )
       if (error) return { error: finalizeClientApiError(error) }
-      if (data.user && !data.session) return { needsEmailConfirmation: true }
-      let session = data.session
+      if (data?.needsEmailConfirmation) return { needsEmailConfirmation: true }
+
+      const supabase = getClient()
+      const {
+        data: { session },
+      } = await withTimeout(
+        supabase.auth.getSession(),
+        SUPABASE_AUTH_TIMEOUT_MS,
+        'Не удалось получить сессию после регистрации.',
+      )
       if (session) {
-        session = (await syncSessionAfterSignIn(supabase, session)) ?? session
         set({ session })
       }
       if (session?.user) {
@@ -329,7 +343,7 @@ export const useStore = create<AppStore>((set, get) => ({
             error:
               get().dataError ??
               toApiError(
-                'Не удалось загрузить данные. Проверьте, что в Supabase выполнен ../backend/supabase/schema.sql.'
+                'Не удалось загрузить данные. Проверьте, что в Supabase выполнен ../backend/supabase/schema.sql.',
               ),
           }
         }
