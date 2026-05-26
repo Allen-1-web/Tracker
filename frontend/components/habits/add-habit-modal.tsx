@@ -26,7 +26,7 @@ export function AddHabitModal() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>
+        <Button data-testid="habits-add-open">
           <Plus className="h-4 w-4 mr-1" /> Добавить привычку
         </Button>
       </DialogTrigger>

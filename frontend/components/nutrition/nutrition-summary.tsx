@@ -67,7 +67,7 @@ export function NutritionSummary({ entries, goals, compact = false }: NutritionS
 
   if (compact) {
     return (
-      <Card>
+      <Card data-testid="nutrition-summary">
         <CardContent className="space-y-3 p-4">
           <div className="flex items-baseline justify-between gap-2">
             <span className="text-sm font-medium">Калории</span>

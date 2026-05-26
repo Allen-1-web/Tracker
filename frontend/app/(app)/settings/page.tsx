@@ -326,6 +326,7 @@ export default function SettingsPage() {
                 size="sm"
                 type="button"
                 onClick={() => void signOut().then(() => router.push('/login'))}
+                data-testid="settings-logout"
               >
                 Выйти
               </Button>

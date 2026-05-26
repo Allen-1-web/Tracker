@@ -22,7 +22,7 @@ export function LinkedHabitsList({ habits, stats }: LinkedHabitsListProps) {
   }
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2" data-testid="goal-linked-habits-list">
       {habits.map((habit) => {
         const habitStats = stats.find((s) => s.habitId === habit.id)
         return (

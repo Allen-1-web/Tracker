@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Button } from '@/components/ui/button'
@@ -18,9 +19,10 @@ interface GoalFormProps {
   submitLabel?: string
 }
 
-/** Упрощённое создание: название, цель, категория и дата — без связей и лишних полей. */
 export function GoalForm({ defaultValues, onSubmit, onCancel, submitLabel = 'Сохранить' }: GoalFormProps) {
-  const { categories } = useStore()
+  const { categories, habits } = useStore()
+  const activeHabits = habits.filter((h) => !h.isArchived)
+  const [linkedHabitIds, setLinkedHabitIds] = useState<string[]>(defaultValues?.linkedHabitIds ?? [])
 
   const {
     register,
@@ -39,6 +41,12 @@ export function GoalForm({ defaultValues, onSubmit, onCancel, submitLabel = 'С�
     },
   })
 
+  const toggleLinkedHabit = (habitId: string) => {
+    setLinkedHabitIds((prev) =>
+      prev.includes(habitId) ? prev.filter((id) => id !== habitId) : [...prev, habitId]
+    )
+  }
+
   const handleFormSubmit = async (data: GoalFormInput) => {
     const cat = categories.find((c) => c.id === data.categoryId)
     if (!cat) return
@@ -51,7 +59,7 @@ export function GoalForm({ defaultValues, onSubmit, onCancel, submitLabel = 'С�
       categoryId: data.categoryId,
       category: cat.name,
       deadline: new Date(data.deadline),
-      linkedHabitIds: [],
+      linkedHabitIds,
     })
   }
 
@@ -61,6 +69,7 @@ export function GoalForm({ defaultValues, onSubmit, onCancel, submitLabel = 'С�
         <Label htmlFor="goal-name">Название</Label>
         <Input
           id="goal-name"
+          data-testid="goal-form-name"
           placeholder="Например: 10 книг за год"
           aria-invalid={!!errors.name}
           className={formFieldErrorClass(!!errors.name)}
@@ -75,6 +84,7 @@ export function GoalForm({ defaultValues, onSubmit, onCancel, submitLabel = 'С�
           <Input
             id="goal-target"
             type="number"
+            data-testid="goal-form-target"
             min={1}
             step="any"
             aria-invalid={!!errors.targetValue}
@@ -87,7 +97,14 @@ export function GoalForm({ defaultValues, onSubmit, onCancel, submitLabel = 'С�
         </div>
         <div className="min-w-[5rem] w-28 space-y-1.5">
           <Label htmlFor="goal-unit">Ед.</Label>
-          <Input id="goal-unit" placeholder="книг" aria-invalid={!!errors.unit} className={formFieldErrorClass(!!errors.unit)} {...register('unit')} />
+          <Input
+            id="goal-unit"
+            placeholder="книг"
+            data-testid="goal-form-unit"
+            aria-invalid={!!errors.unit}
+            className={formFieldErrorClass(!!errors.unit)}
+            {...register('unit')}
+          />
           {errors.unit && <p className="text-xs text-[var(--destructive)]">{errors.unit.message}</p>}
         </div>
         <div className="min-w-[10rem] flex-1 space-y-1.5">
@@ -95,6 +112,7 @@ export function GoalForm({ defaultValues, onSubmit, onCancel, submitLabel = 'С�
           <Input
             id="goal-deadline"
             type="date"
+            data-testid="goal-form-deadline"
             aria-invalid={!!errors.deadline}
             className={cn('w-full', formFieldErrorClass(!!errors.deadline))}
             {...register('deadline')}
@@ -110,7 +128,11 @@ export function GoalForm({ defaultValues, onSubmit, onCancel, submitLabel = 'С�
           name="categoryId"
           render={({ field }) => (
             <Select value={field.value} onValueChange={field.onChange}>
-              <SelectTrigger aria-invalid={!!errors.categoryId} className={formFieldErrorClass(!!errors.categoryId)}>
+              <SelectTrigger
+                aria-invalid={!!errors.categoryId}
+                className={formFieldErrorClass(!!errors.categoryId)}
+                data-testid="goal-form-category-trigger"
+              >
                 <SelectValue placeholder={categories.length ? 'Выберите…' : 'Сначала создайте категорию в настройках'} />
               </SelectTrigger>
               <SelectContent>
@@ -135,11 +157,42 @@ export function GoalForm({ defaultValues, onSubmit, onCancel, submitLabel = 'С�
         )}
       </div>
 
+      {activeHabits.length > 0 && (
+        <div className="space-y-2" data-testid="goal-form-linked-habits">
+          <Label>Связанные привычки</Label>
+          <p className="text-xs text-[var(--muted-foreground)]">
+            Отметки по этим привычкам помогут видеть прогресс рядом с целью
+          </p>
+          <div className="max-h-36 space-y-2 overflow-y-auto rounded-lg border border-[var(--border)] p-2">
+            {activeHabits.map((habit) => {
+              const checked = linkedHabitIds.includes(habit.id)
+              return (
+                <label
+                  key={habit.id}
+                  className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 hover:bg-[var(--accent)]"
+                  data-testid={`goal-form-link-habit-${habit.id}`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={() => toggleLinkedHabit(habit.id)}
+                    className="h-4 w-4 accent-[var(--primary)]"
+                  />
+                  <span className="text-sm">
+                    {habit.icon} {habit.name}
+                  </span>
+                </label>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
       <div className="flex gap-2 pt-2">
-        <Button type="button" variant="outline" onClick={onCancel} className="flex-1">
+        <Button type="button" variant="outline" onClick={onCancel} className="flex-1" data-testid="goal-form-cancel">
           Отмена
         </Button>
-        <Button type="submit" className="flex-1" disabled={!isValid || isSubmitting}>
+        <Button type="submit" className="flex-1" disabled={!isValid || isSubmitting} data-testid="goal-form-submit">
           {isSubmitting ? 'Сохранение...' : submitLabel}
         </Button>
       </div>

@@ -4,6 +4,10 @@
 
 Продуктовая стратегия: [`docs/PRODUCT.md`](docs/PRODUCT.md)
 
+## E2E тесты (Playwright)
+
+См. [`e2e/README.md`](e2e/README.md).
+
 | Папка | Назначение |
 |-------|------------|
 | `frontend/` | Next.js приложение (`npm run dev` из этой папки) |

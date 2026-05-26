@@ -26,7 +26,7 @@ export function AddGoalModal() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>
+        <Button data-testid="goals-add-open">
           <Plus className="h-4 w-4 mr-1" /> Добавить цель
         </Button>
       </DialogTrigger>

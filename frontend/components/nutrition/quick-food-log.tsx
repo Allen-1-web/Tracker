@@ -91,6 +91,7 @@ export function QuickFoodLog({ date }: QuickFoodLogProps) {
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--muted-foreground)]" />
         <Input
           className="pl-9"
+          data-testid="nutrition-food-query"
           placeholder="Продукт: курица, рис, яйцо…"
           value={query}
           onChange={(e) => {
@@ -106,6 +107,7 @@ export function QuickFoodLog({ date }: QuickFoodLogProps) {
             key={food.id}
             type="button"
             onClick={() => pickFood(food)}
+            data-testid="nutrition-food-chip"
             className={cn(
               'rounded-full border px-2.5 py-1 text-xs transition-colors',
               selected?.id === food.id
@@ -124,6 +126,7 @@ export function QuickFoodLog({ date }: QuickFoodLogProps) {
           <Input
             type="number"
             min={1}
+            data-testid="nutrition-amount"
             value={amount}
             onChange={(e) => {
               setAmount(e.target.value)
@@ -139,6 +142,7 @@ export function QuickFoodLog({ date }: QuickFoodLogProps) {
               key={mt.value}
               type="button"
               onClick={() => setMealType(mt.value)}
+              data-testid={`nutrition-meal-${mt.value}`}
               className={cn(
                 'rounded-md border px-2 py-1 text-xs',
                 mealType === mt.value
@@ -153,6 +157,7 @@ export function QuickFoodLog({ date }: QuickFoodLogProps) {
         <Button
           type="button"
           className="w-full sm:w-auto shrink-0"
+          data-testid="nutrition-add"
           disabled={!canAdd || addedFlash}
           onClick={() => void handleAdd()}
         >

@@ -66,6 +66,7 @@ function LoginForm() {
             type="email"
             autoComplete="email"
             placeholder="you@example.com"
+            data-testid="auth-login-email"
             aria-invalid={!!errors.email}
             className={formFieldErrorClass(!!errors.email)}
             {...register('email')}
@@ -87,6 +88,7 @@ function LoginForm() {
             type="password"
             autoComplete="current-password"
             placeholder="••••••••"
+            data-testid="auth-login-password"
             aria-invalid={!!errors.password}
             className={formFieldErrorClass(!!errors.password)}
             {...register('password')}
@@ -96,7 +98,7 @@ function LoginForm() {
           )}
         </div>
 
-        <Button type="submit" className="w-full" disabled={isSubmitting}>
+        <Button type="submit" className="w-full" disabled={isSubmitting} data-testid="auth-login-submit">
           {isSubmitting ? 'Вход...' : 'Войти'}
         </Button>
       </form>

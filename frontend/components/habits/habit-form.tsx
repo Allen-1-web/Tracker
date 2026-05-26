@@ -69,6 +69,7 @@ export function HabitForm({ defaultValues, onSubmit, onCancel, submitLabel = 'С
       <div className="space-y-1.5">
         <Label>Название</Label>
         <Input
+          data-testid="habit-form-name"
           placeholder="Например: Утренняя зарядка"
           aria-invalid={!!errors.name}
           className={formFieldErrorClass(!!errors.name)}
@@ -85,11 +86,12 @@ export function HabitForm({ defaultValues, onSubmit, onCancel, submitLabel = 'С
             errors.icon && formFieldErrorClass(true)
           )}
         >
-          {ICONS.map((icon) => (
+          {ICONS.map((icon, idx) => (
             <button
               key={icon}
               type="button"
               onClick={() => setValue('icon', icon, { shouldValidate: true })}
+              data-testid={`habit-form-icon-${idx}`}
               className={`rounded-lg border-2 p-2 text-xl transition-colors ${
                 selectedIcon === icon
                   ? 'border-[var(--primary)]'
@@ -111,11 +113,12 @@ export function HabitForm({ defaultValues, onSubmit, onCancel, submitLabel = 'С
             errors.color && formFieldErrorClass(true)
           )}
         >
-          {COLORS.map((color) => (
+          {COLORS.map((color, idx) => (
             <button
               key={color}
               type="button"
               onClick={() => setValue('color', color, { shouldValidate: true })}
+              data-testid={`habit-form-color-${idx}`}
               className={`h-8 w-8 rounded-full border-2 transition-transform ${
                 selectedColor === color ? 'scale-110 border-[var(--foreground)]' : 'border-transparent'
               }`}
@@ -133,7 +136,11 @@ export function HabitForm({ defaultValues, onSubmit, onCancel, submitLabel = 'С
           name="categoryId"
           render={({ field }) => (
             <Select value={field.value} onValueChange={field.onChange}>
-              <SelectTrigger aria-invalid={!!errors.categoryId} className={formFieldErrorClass(!!errors.categoryId)}>
+              <SelectTrigger
+                aria-invalid={!!errors.categoryId}
+                className={formFieldErrorClass(!!errors.categoryId)}
+                data-testid="habit-form-category-trigger"
+              >
                 <SelectValue placeholder="Выберите категорию" />
               </SelectTrigger>
               <SelectContent>
@@ -155,6 +162,7 @@ export function HabitForm({ defaultValues, onSubmit, onCancel, submitLabel = 'С
           <button
             type="button"
             onClick={() => setValue('frequencyType', 'daily', { shouldValidate: true })}
+            data-testid="habit-form-frequency-daily"
             className={`rounded-lg border px-3 py-1.5 text-sm transition-colors ${
               frequencyType === 'daily'
                 ? 'border-[var(--primary)] bg-[var(--primary)] text-white'
@@ -166,6 +174,7 @@ export function HabitForm({ defaultValues, onSubmit, onCancel, submitLabel = 'С
           <button
             type="button"
             onClick={() => setValue('frequencyType', 'custom', { shouldValidate: true })}
+            data-testid="habit-form-frequency-custom"
             className={`rounded-lg border px-3 py-1.5 text-sm transition-colors ${
               frequencyType === 'custom'
                 ? 'border-[var(--primary)] bg-[var(--primary)] text-white'
@@ -187,6 +196,7 @@ export function HabitForm({ defaultValues, onSubmit, onCancel, submitLabel = 'С
               <button
                 key={day}
                 type="button"
+                data-testid={`habit-form-day-${index}`}
                 onClick={() => toggleDay(index)}
                 className={`flex-1 rounded-lg border py-1.5 text-xs transition-colors ${
                   frequencyDays.includes(index)
@@ -205,10 +215,10 @@ export function HabitForm({ defaultValues, onSubmit, onCancel, submitLabel = 'С
       </div>
 
       <div className="flex gap-2 pt-2">
-        <Button type="button" variant="outline" onClick={onCancel} className="flex-1">
+        <Button type="button" variant="outline" onClick={onCancel} className="flex-1" data-testid="habit-form-cancel">
           Отмена
         </Button>
-        <Button type="submit" className="flex-1" disabled={!isValid || isSubmitting}>
+        <Button type="submit" className="flex-1" disabled={!isValid || isSubmitting} data-testid="habit-form-submit">
           {isSubmitting ? 'Сохранение...' : submitLabel}
         </Button>
       </div>

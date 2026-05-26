@@ -40,13 +40,16 @@ export function DailyProgressDashboard() {
   const day = buildDailyDashboard(habits, habitLogs, goals, mealEntries, nutritionGoals)
 
   return (
-    <Card className="border-[var(--border)]">
+    <Card className="border-[var(--border)]" data-testid="dashboard-daily-progress">
       <CardHeader className="pb-2">
         <CardTitle className="text-base">Прогресс дня</CardTitle>
       </CardHeader>
       <CardContent className="space-y-5">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <div className="flex items-start gap-3 rounded-lg bg-[var(--muted)]/25 p-3">
+          <div
+            className="flex items-start gap-3 rounded-lg bg-[var(--muted)]/25 p-3"
+            data-testid="dashboard-habits-widget"
+          >
             <CheckCircle2 className="h-5 w-5 shrink-0 text-indigo-600" />
             <div className="min-w-0 flex-1">
               <p className="text-xs text-[var(--muted-foreground)]">Привычки</p>
@@ -58,7 +61,10 @@ export function DailyProgressDashboard() {
             </div>
           </div>
 
-          <div className="flex items-start gap-3 rounded-lg bg-[var(--muted)]/25 p-3">
+          <div
+            className="flex items-start gap-3 rounded-lg bg-[var(--muted)]/25 p-3"
+            data-testid="dashboard-streak-widget"
+          >
             <Flame className="h-5 w-5 shrink-0 text-orange-500" />
             <div>
               <p className="text-xs text-[var(--muted-foreground)]">Серия</p>
@@ -67,7 +73,10 @@ export function DailyProgressDashboard() {
             </div>
           </div>
 
-          <div className="flex items-start gap-3 rounded-lg bg-[var(--muted)]/25 p-3">
+          <div
+            className="flex items-start gap-3 rounded-lg bg-[var(--muted)]/25 p-3"
+            data-testid="dashboard-goals-widget"
+          >
             <Target className="h-5 w-5 shrink-0 text-[var(--primary)]" />
             <div>
               <p className="text-xs text-[var(--muted-foreground)]">Цели</p>
@@ -100,7 +109,7 @@ export function DailyProgressDashboard() {
           </div>
         )}
 
-        <div className="space-y-3 border-t border-[var(--border)] pt-4">
+        <div className="space-y-3 border-t border-[var(--border)] pt-4" data-testid="dashboard-nutrition-widget">
           <div className="flex items-center justify-between gap-2">
             <span className="flex items-center gap-2 text-sm font-medium">
               <UtensilsCrossed className="h-4 w-4 text-emerald-600" />

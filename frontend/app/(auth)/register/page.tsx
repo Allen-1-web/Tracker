@@ -63,6 +63,7 @@ export default function RegisterPage() {
           <Label htmlFor="name">Имя</Label>
           <Input
             id="name"
+            data-testid="auth-register-name"
             placeholder="Алексей"
             aria-invalid={!!errors.name}
             className={formFieldErrorClass(!!errors.name)}
@@ -78,6 +79,7 @@ export default function RegisterPage() {
           <Input
             id="email"
             type="email"
+            data-testid="auth-register-email"
             placeholder="you@example.com"
             aria-invalid={!!errors.email}
             className={formFieldErrorClass(!!errors.email)}
@@ -93,6 +95,7 @@ export default function RegisterPage() {
           <Input
             id="password"
             type="password"
+            data-testid="auth-register-password"
             placeholder="Минимум 6 символов"
             aria-invalid={!!errors.password}
             className={formFieldErrorClass(!!errors.password)}
@@ -103,7 +106,7 @@ export default function RegisterPage() {
           )}
         </div>
 
-        <Button type="submit" className="w-full" disabled={isSubmitting}>
+        <Button type="submit" className="w-full" disabled={isSubmitting} data-testid="auth-register-submit">
           {isSubmitting ? 'Регистрация...' : 'Создать аккаунт'}
         </Button>
       </form>

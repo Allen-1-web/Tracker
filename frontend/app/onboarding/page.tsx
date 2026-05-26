@@ -81,7 +81,7 @@ export default function OnboardingPage() {
       return
     }
     const habitCat = categories.find((c) => c.id === habitCategoryId)
-    await addHabit({
+    const ok = await addHabit({
       name: habitName.trim(),
       icon: habitIcon,
       color: '#6366f1',
@@ -90,7 +90,7 @@ export default function OnboardingPage() {
       frequency: 'daily',
       isArchived: false,
     })
-    setStep(1)
+    if (ok) setStep(1)
   }
 
   const handleAddGoal = async () => {
@@ -145,7 +145,10 @@ export default function OnboardingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--background)] flex items-center justify-center p-4">
+    <div
+      className="min-h-screen bg-[var(--background)] flex items-center justify-center p-4"
+      data-testid="onboarding-root"
+    >
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="flex items-center justify-center gap-2 mb-8">
@@ -174,6 +177,7 @@ export default function OnboardingPage() {
               <div className="space-y-1.5">
                 <Label>Название</Label>
                 <Input
+                  data-testid="onboarding-habit-name"
                   placeholder="Например: Утренняя зарядка"
                   value={habitName}
                   onChange={(e) => {
@@ -241,6 +245,7 @@ export default function OnboardingPage() {
                   <SelectTrigger
                     aria-invalid={!!habitFieldErrors.categoryId}
                     className={formFieldErrorClass(!!habitFieldErrors.categoryId)}
+                    data-testid="onboarding-habit-category-trigger"
                   >
                     <SelectValue placeholder="Выберите..." />
                   </SelectTrigger>
@@ -257,7 +262,7 @@ export default function OnboardingPage() {
                 )}
               </div>
 
-              <Button type="button" onClick={handleAddHabit} className="w-full">
+              <Button type="button" onClick={handleAddHabit} className="w-full" data-testid="onboarding-habit-next">
                 Добавить и продолжить <ArrowRight className="h-4 w-4 ml-1.5" />
               </Button>
             </div>
@@ -342,7 +347,13 @@ export default function OnboardingPage() {
               </div>
 
               <div className="flex gap-2">
-                <Button type="button" variant="outline" onClick={() => setStep(2)} className="flex-1">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setStep(2)}
+                  className="flex-1"
+                  data-testid="onboarding-goal-skip"
+                >
                   Пропустить
                 </Button>
                 <Button type="button" onClick={handleAddGoal} className="flex-1">
@@ -376,7 +387,7 @@ export default function OnboardingPage() {
                 <Button variant="outline" onClick={handleFinish} className="flex-1">
                   Пропустить
                 </Button>
-                <Button onClick={handleFinish} className="flex-1">
+                <Button onClick={handleFinish} className="flex-1" data-testid="onboarding-telegram-finish">
                   Готово! 🎉
                 </Button>
               </div>

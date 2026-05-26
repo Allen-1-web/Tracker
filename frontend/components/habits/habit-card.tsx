@@ -17,7 +17,10 @@ interface HabitCardProps {
 
 export function HabitCard({ habit, stats, completedToday, onToggle }: HabitCardProps) {
   return (
-    <Card className="group border-0 bg-transparent shadow-none hover:bg-[var(--muted)]/35 dark:hover:bg-[var(--muted)]/45 transition-colors">
+    <Card
+      className="group border-0 bg-transparent shadow-none hover:bg-[var(--muted)]/35 dark:hover:bg-[var(--muted)]/45 transition-colors"
+      data-testid="habit-card"
+    >
       <CardContent className="p-3.5">
         <div className="flex items-start gap-2.5 mb-2">
           <div
@@ -38,6 +41,7 @@ export function HabitCard({ habit, stats, completedToday, onToggle }: HabitCardP
               onToggle?.()
             }}
             className="shrink-0 text-[var(--muted-foreground)] hover:text-[var(--primary)] transition-colors"
+            data-testid="habit-toggle-today"
           >
             {completedToday ? (
               <CheckCircle2 className="h-6 w-6 text-[var(--primary)]" />
@@ -55,7 +59,9 @@ export function HabitCard({ habit, stats, completedToday, onToggle }: HabitCardP
                 {stats.completionRate30}% за 30 дней
               </span>
               {stats.currentStreak > 0 && (
-                <StreakBadge streak={stats.currentStreak} size="sm" />
+                <span data-testid="habit-streak">
+                  <StreakBadge streak={stats.currentStreak} size="sm" />
+                </span>
               )}
             </div>
           </>

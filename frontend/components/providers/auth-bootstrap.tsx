@@ -14,11 +14,14 @@ export function AuthBootstrap({ children }: { children: React.ReactNode }) {
 
   if (!authReady) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[var(--background)]">
+      <div
+        className="flex min-h-screen items-center justify-center bg-[var(--background)]"
+        data-testid="auth-loading"
+      >
         <p className="text-[var(--muted-foreground)]">Загрузка...</p>
       </div>
     )
   }
 
-  return <>{children}</>
+  return <div data-testid="app-auth-ready">{children}</div>
 }

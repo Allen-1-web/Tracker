@@ -52,7 +52,7 @@ export function AddProgressModal({ goalId, unit, currentValue, targetValue }: Ad
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>
+        <Button data-testid="goal-add-progress-open">
           <Plus className="h-4 w-4 mr-1.5" /> Добавить прогресс
         </Button>
       </DialogTrigger>
@@ -67,6 +67,7 @@ export function AddProgressModal({ goalId, unit, currentValue, targetValue }: Ad
               type="number"
               min={0}
               step="0.1"
+              data-testid="goal-progress-value"
               aria-invalid={!!errors.value}
               className={formFieldErrorClass(!!errors.value)}
               {...register('value', { valueAsNumber: true })}
@@ -87,7 +88,7 @@ export function AddProgressModal({ goalId, unit, currentValue, targetValue }: Ad
             <Button type="button" variant="outline" onClick={() => setOpen(false)} className="flex-1">
               Отмена
             </Button>
-            <Button type="submit" className="flex-1" disabled={!isValid || isSubmitting}>
+            <Button type="submit" className="flex-1" disabled={!isValid || isSubmitting} data-testid="goal-progress-submit">
               {isSubmitting ? 'Сохранение...' : 'Сохранить'}
             </Button>
           </div>
