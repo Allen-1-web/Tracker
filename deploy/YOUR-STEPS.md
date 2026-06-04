@@ -30,13 +30,18 @@ nslookup ptnway.ru
 
 ---
 
-## Шаг 3. Supabase (~2 мин)
+## Шаг 3. Supabase (~5 мин)
 
 1. [supabase.com/dashboard](https://supabase.com/dashboard) → проект **uogcqfnlfrdpccxpxidh**.
 2. **Authentication** → **URL configuration**:
    - **Site URL:** `https://ptnway.ru`
    - **Redirect URLs:** добавить `https://ptnway.ru/**`
 3. Сохранить.
+4. **SQL Editor** → New query → вставьте и выполните **Run** (по порядку):
+   - `backend/supabase/migrations/20260524_telegram_integration.sql`
+   - `backend/supabase/migrations/20260524b_telegram_user_delete_policy.sql`
+   - `backend/supabase/migrations/20260524c_habit_logs_log_date.sql`  
+   Без этого бот падает с ошибками таблиц `telegram_users` / `telegram_link_tokens`.
 
 ---
 
@@ -94,10 +99,26 @@ scp deploy/local/bot.env.production root@176.124.210.254:/opt/tracker/bot/.env
 
 ```bash
 cd /opt/tracker
+git pull origin main
 docker compose -f docker-compose.prod.yml up -d --build
 docker compose -f docker-compose.prod.yml ps
-docker compose -f docker-compose.prod.yml logs -f bot-webhook
 ```
+
+Если `bot-webhook` / `bot-worker` в статусе **Restarting**:
+
+```bash
+docker compose -f docker-compose.prod.yml logs --tail=60 bot-webhook
+docker compose -f docker-compose.prod.yml logs --tail=60 bot-worker
+```
+
+Типичные строки в логах:
+
+| Сообщение | Решение |
+|-----------|---------|
+| `Invalid bot environment` | Проверить `bot/.env` (токен, Supabase URL/keys, webhook secrets ≥16 символов) |
+| `FATAL: ... 401` / `Unauthorized` | Новый токен в BotFather → обновить `bot/.env` → `restart` |
+| `relation "telegram_users" does not exist` | Шаг 3.4 — миграции в SQL Editor |
+| `redis: connection error` | `docker compose ps` — redis должен быть healthy |
 
 Откройте в браузере: **http://ptnway.ru**
 

@@ -5,8 +5,13 @@ import { z } from 'zod'
  * dotenv грузит `KEY=` как пустую строку, а не как undefined.
  * Этот хелпер делает «`''` → undefined», чтобы `.optional()` срабатывал ожидаемо.
  */
+const trim = (v: unknown) => (typeof v === 'string' ? v.trim() : v)
+
 const optionalStr = (schema: z.ZodString) =>
-  z.preprocess((v) => (v === '' || v == null ? undefined : v), schema.optional())
+  z.preprocess((v) => {
+    const t = trim(v)
+    return t === '' || t == null ? undefined : t
+  }, schema.optional())
 
 const EnvSchema = z
   .object({
@@ -15,7 +20,7 @@ const EnvSchema = z
       .enum(['trace', 'debug', 'info', 'warn', 'error', 'fatal'])
       .default('info'),
 
-    TELEGRAM_BOT_TOKEN: z.string().min(20, 'TELEGRAM_BOT_TOKEN is required'),
+    TELEGRAM_BOT_TOKEN: z.preprocess(trim, z.string().min(20, 'TELEGRAM_BOT_TOKEN is required')),
     TELEGRAM_BOT_USERNAME: optionalStr(z.string().min(1)),
     TELEGRAM_MODE: z.enum(['polling', 'webhook']).default('polling'),
     TELEGRAM_WEBHOOK_BASE_URL: optionalStr(z.string().url()),
@@ -26,10 +31,14 @@ const EnvSchema = z
     HTTP_HOST: z.string().default('0.0.0.0'),
     WORKER_HTTP_PORT: z.coerce.number().int().min(1).max(65535).default(3002),
 
-    SUPABASE_URL: z.string().url('SUPABASE_URL must be a valid URL (e.g. https://xxxx.supabase.co)'),
-    SUPABASE_SERVICE_ROLE_KEY: z
-      .string()
-      .min(20, 'SUPABASE_SERVICE_ROLE_KEY is required'),
+    SUPABASE_URL: z.preprocess(
+      trim,
+      z.string().url('SUPABASE_URL must be a valid URL (e.g. https://xxxx.supabase.co)'),
+    ),
+    SUPABASE_SERVICE_ROLE_KEY: z.preprocess(
+      trim,
+      z.string().min(20, 'SUPABASE_SERVICE_ROLE_KEY is required'),
+    ),
 
     REDIS_URL: z.string().min(1).default('redis://localhost:6379'),
     BULLMQ_PREFIX: z.string().min(1).default('tracker'),

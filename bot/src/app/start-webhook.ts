@@ -27,8 +27,10 @@ async function bootstrap(): Promise<void> {
     await container.repositories.telegramUsers.findByChatId(0)
     log.info('supabase: connection OK')
   } catch (err) {
-    log.error({ err }, 'supabase: connection FAILED')
-    throw err
+    log.error(
+      { err },
+      'supabase: connection FAILED — примените backend/supabase/migrations/20260524*.sql в Supabase SQL Editor',
+    )
   }
 
   const cleaned = await container.repositories.linkTokens.cleanupExpired()
