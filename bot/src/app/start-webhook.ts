@@ -1,5 +1,6 @@
 import { buildContainer } from './container.js'
 import { createBot } from '../infrastructure/telegram/bot.js'
+import { createRedisConnection } from '../infrastructure/redis/client.js'
 import {
   createBotHttpServer,
   registerTelegramWebhook,
@@ -33,6 +34,18 @@ async function bootstrap(): Promise<void> {
   const cleaned = await container.repositories.linkTokens.cleanupExpired()
   if (cleaned > 0) log.info({ cleaned }, 'link-tokens: cleaned expired')
 
+  const redis = createRedisConnection(config)
+  redis.on('error', (err: Error) => log.error({ err }, 'redis: connection error'))
+  await new Promise<void>((resolve, reject) => {
+    if (redis.status === 'ready') {
+      resolve()
+      return
+    }
+    redis.once('ready', () => resolve())
+    redis.once('error', (err: Error) => reject(err))
+  })
+  log.info('redis: connection OK')
+
   const bot = createBot(container)
   await bot.init()
   log.info({ bot: bot.botInfo.username, mode: 'webhook' }, 'bot: initialized')
@@ -42,7 +55,7 @@ async function bootstrap(): Promise<void> {
     config,
     log,
     telegramUsers: container.repositories.telegramUsers,
-    redis: null,
+    redis,
   })
 
   await registerTelegramWebhook({ bot, config, log })
@@ -51,6 +64,7 @@ async function bootstrap(): Promise<void> {
     log.info({ signal }, 'webhook: shutting down')
     try {
       await app.close()
+      await redis.quit()
       log.info('webhook: stopped cleanly')
       process.exit(0)
     } catch (err) {
