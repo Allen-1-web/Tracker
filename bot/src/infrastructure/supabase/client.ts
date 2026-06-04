@@ -14,7 +14,7 @@ export function getSupabaseAdmin(): SupabaseClient<Database> {
   if (cached) return cached
 
   const { supabase } = loadConfig()
-  cached = createClient<Database>(supabase.url, supabase.serviceRoleKey, {
+  cached = createClient(supabase.url, supabase.serviceRoleKey, {
     auth: {
       persistSession: false,
       autoRefreshToken: false,
@@ -24,8 +24,8 @@ export function getSupabaseAdmin(): SupabaseClient<Database> {
       headers: { 'x-tracker-bot': 'service-role' },
     },
     // Node 20 (Docker Alpine) has no native WebSocket — required by @supabase/realtime-js
-    realtime: { transport: ws as unknown as typeof WebSocket },
-  })
+    realtime: { transport: ws as never },
+  }) as SupabaseClient<Database>
 
   return cached
 }
