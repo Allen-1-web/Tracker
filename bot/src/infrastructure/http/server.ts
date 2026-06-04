@@ -11,39 +11,7 @@ import { metrics, MetricNames } from '../metrics/registry.js'
 
 export type BotHttpServer = FastifyInstance
 
-function buildFastifyApp(): FastifyInstance {
-  return Fastify({
-    logger: false,
-    trustProxy: true,
-    bodyLimit: 1_048_576,
-  })
-}
-
-/** HTTP + /healthz — слушает порт до bot.init(), чтобы nginx не получал 502. */
-export async function createBotHttpServerBase(args: {
-  config: AppConfig
-  log: AppLogger
-  telegramUsers: TelegramUserRepository
-  redis: Redis | null
-}): Promise<FastifyInstance> {
-  const { config, log, telegramUsers, redis } = args
-  const app = buildFastifyApp()
-
-  app.get('/livez', async (_req, reply) => reply.send({ ok: true }))
-
-  registerOpsRoutes(app, { log, telegramUsers, redis })
-
-  await app.listen({ host: config.http.host, port: config.http.port })
-  log.info(
-    { host: config.http.host, port: config.http.port },
-    'http: server listening (health)',
-  )
-
-  return app
-}
-
-/** Регистрирует POST webhook после успешного bot.init(). */
-export function attachWebhookRoute(args: {
+function registerWebhookRoute(args: {
   app: FastifyInstance
   bot: Bot<AppContext>
   config: AppConfig
@@ -52,7 +20,7 @@ export function attachWebhookRoute(args: {
   const { app, bot, config, log } = args
   const webhook = config.telegram.webhook
   if (!webhook) {
-    throw new Error('attachWebhookRoute requires webhook config')
+    throw new Error('registerWebhookRoute requires webhook config')
   }
 
   const handleWebhook = webhookCallback(bot, 'fastify', {
@@ -73,21 +41,38 @@ export function attachWebhookRoute(args: {
       }
     }
   })
-
-  log.info({ webhookPath: webhook.fullPath }, 'http: webhook route registered')
 }
 
-/** @deprecated Use createBotHttpServerBase + attachWebhookRoute */
-export async function createBotHttpServer(args: {
+/** Регистрирует все маршруты и слушает порт (до bot.init()). */
+export async function createAndListenBotHttpServer(args: {
   bot: Bot<AppContext>
   config: AppConfig
   log: AppLogger
   telegramUsers: TelegramUserRepository
   redis: Redis | null
-}) {
+}): Promise<FastifyInstance> {
   const { bot, config, log, telegramUsers, redis } = args
-  const app = await createBotHttpServerBase({ config, log, telegramUsers, redis })
-  attachWebhookRoute({ app, bot, config, log })
+  const webhook = config.telegram.webhook
+  if (!webhook) {
+    throw new Error('createAndListenBotHttpServer requires TELEGRAM_MODE=webhook')
+  }
+
+  const app = Fastify({
+    logger: false,
+    trustProxy: true,
+    bodyLimit: 1_048_576,
+  })
+
+  app.get('/livez', async (_req, reply) => reply.send({ ok: true }))
+  registerOpsRoutes(app, { log, telegramUsers, redis })
+  registerWebhookRoute({ app, bot, config, log })
+
+  await app.listen({ host: config.http.host, port: config.http.port })
+  log.info(
+    { host: config.http.host, port: config.http.port, webhookPath: webhook.fullPath },
+    'http: server listening',
+  )
+
   return app
 }
 

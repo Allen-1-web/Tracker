@@ -2,8 +2,7 @@ import { buildContainer } from './container.js'
 import { createBot, initBotWithTimeout } from '../infrastructure/telegram/bot.js'
 import { createRedisConnection } from '../infrastructure/redis/client.js'
 import {
-  attachWebhookRoute,
-  createBotHttpServerBase,
+  createAndListenBotHttpServer,
   registerTelegramWebhook,
 } from '../infrastructure/http/server.js'
 
@@ -45,18 +44,15 @@ async function bootstrap(): Promise<void> {
   })
   log.info('redis: connection OK')
 
-  const app = await createBotHttpServerBase({
+  const bot = createBot(container)
+  const app = await createAndListenBotHttpServer({
+    bot,
     config,
     log,
     telegramUsers: container.repositories.telegramUsers,
     redis,
   })
 
-  const bot = createBot(container)
-  attachWebhookRoute({ app, bot, config, log })
-
-  // init + setWebhook в фоне: из Docker api.telegram.org иногда недоступен,
-  // а webhook URL уже можно регистрировать с хоста (deploy/scripts/telegram-webhook.sh).
   void (async () => {
     try {
       await initBotWithTimeout(bot, log, 30_000)
