@@ -85,7 +85,7 @@ echo "=== bot health (node, inside container) ==="
   2>/dev/null || echo "bot-webhook: exec failed (контейнер не запущен?)"
 echo
 
-echo "=== nginx → bot-webhook (docker network) ==="
-"${COMPOSE[@]}" exec -T nginx wget -qO- "http://bot-webhook:3001/livez" 2>/dev/null \
-  || echo "nginx не достучался до bot-webhook:3001"
+echo "=== nginx → bot (host network :3001) ==="
+"${COMPOSE[@]}" exec -T nginx wget -qO- "http://host.docker.internal:3001/livez" 2>/dev/null \
+  || echo "nginx не достучался до host.docker.internal:3001"
 echo

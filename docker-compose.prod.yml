@@ -17,6 +17,8 @@ services:
     container_name: tracker-redis
     restart: unless-stopped
     command: ['redis-server', '--appendonly', 'yes']
+    ports:
+      - '127.0.0.1:6379:6379'
     volumes:
       - tracker_redis_data:/data
     networks:
@@ -69,23 +71,18 @@ services:
       target: webhook
     container_name: tracker-bot-webhook
     restart: unless-stopped
-    dns:
-      - 8.8.8.8
-      - 1.1.1.1
+    network_mode: host
     env_file:
       - bot/.env
     environment:
       NODE_ENV: production
-      NODE_OPTIONS: --dns-result-order=ipv4first
       TELEGRAM_MODE: webhook
-      REDIS_URL: redis://redis:6379
+      REDIS_URL: redis://127.0.0.1:6379
       HTTP_PORT: 3001
       HTTP_HOST: 0.0.0.0
     depends_on:
       redis:
         condition: service_healthy
-    networks:
-      - tracker_net
     healthcheck:
       test:
         [
@@ -106,30 +103,25 @@ services:
       target: worker
     container_name: tracker-bot-worker
     restart: unless-stopped
-    dns:
-      - 8.8.8.8
-      - 1.1.1.1
+    network_mode: host
     env_file:
       - bot/.env
     environment:
       NODE_ENV: production
-      NODE_OPTIONS: --dns-result-order=ipv4first
       TELEGRAM_MODE: polling
-      REDIS_URL: redis://redis:6379
+      REDIS_URL: redis://127.0.0.1:6379
       WORKER_HTTP_PORT: 3002
       HTTP_HOST: 0.0.0.0
     depends_on:
       redis:
         condition: service_healthy
-    networks:
-      - tracker_net
     healthcheck:
       test:
         [
           'CMD',
           'node',
           '-e',
-          "fetch('http://127.0.0.1:3002/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+          "fetch('http://127.0.0.1:3002/livez').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
         ]
       interval: 30s
       timeout: 5s
@@ -140,6 +132,8 @@ services:
     image: nginx:1.27-alpine
     container_name: tracker-nginx
     restart: unless-stopped
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
     ports:
       - '80:80'
       - '443:443'

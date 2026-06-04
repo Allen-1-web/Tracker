@@ -16,6 +16,7 @@ export async function createOpsHttpServer(args: {
   const { config, log, telegramUsers, redis, port } = args
 
   const app = Fastify({ logger: false })
+  app.get('/livez', async (_req, reply) => reply.send({ ok: true }))
   registerOpsRoutes(app, { log, telegramUsers, redis })
 
   await app.listen({ host: config.http.host, port })
