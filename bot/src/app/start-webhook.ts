@@ -1,17 +1,14 @@
 import { buildContainer } from './container.js'
-import { createBot } from '../infrastructure/telegram/bot.js'
+import { createBot, initBotWithTimeout, probeTelegramApi } from '../infrastructure/telegram/bot.js'
 import { createRedisConnection } from '../infrastructure/redis/client.js'
 import {
-  createBotHttpServer,
+  attachWebhookRoute,
+  createBotHttpServerBase,
   registerTelegramWebhook,
 } from '../infrastructure/http/server.js'
 
 /**
  * Production entry-point: Fastify webhook + /healthz + /metrics.
- *
- * Запуск:
- *   TELEGRAM_MODE=webhook npm run dev:webhook
- *   npm run start:webhook
  */
 async function bootstrap(): Promise<void> {
   const container = buildContainer()
@@ -48,17 +45,22 @@ async function bootstrap(): Promise<void> {
   })
   log.info('redis: connection OK')
 
-  const bot = createBot(container)
-  await bot.init()
-  log.info({ bot: bot.botInfo.username, mode: 'webhook' }, 'bot: initialized')
-
-  const app = await createBotHttpServer({
-    bot,
+  // Слушаем порт до bot.init() — иначе nginx → 502, пока init висит.
+  const app = await createBotHttpServerBase({
     config,
     log,
     telegramUsers: container.repositories.telegramUsers,
     redis,
   })
+
+  log.info('telegram: probing API (getMe)...')
+  await probeTelegramApi(config.telegram.token)
+  log.info('telegram: API OK')
+
+  const bot = createBot(container)
+  await initBotWithTimeout(bot, log)
+
+  attachWebhookRoute({ app, bot, config, log })
 
   try {
     await registerTelegramWebhook({ bot, config, log })

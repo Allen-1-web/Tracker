@@ -75,11 +75,11 @@ fi
 
 echo "=== bot health (node, inside container) ==="
 "${COMPOSE[@]}" exec -T bot-webhook node -e \
-  "fetch('http://127.0.0.1:3001/healthz').then(r=>r.text().then(t=>console.log(r.status,t))).catch(e=>{console.error('FAIL',e.message);process.exit(1)})" \
+  "fetch('http://127.0.0.1:3001/livez').then(r=>r.text().then(t=>console.log('livez',r.status,t))).catch(e=>{console.error('FAIL',e.message);process.exit(1)})" \
   2>/dev/null || echo "bot-webhook: exec failed (контейнер не запущен?)"
 echo
 
 echo "=== nginx → bot-webhook (docker network) ==="
-"${COMPOSE[@]}" exec -T nginx wget -qO- "http://bot-webhook:3001/healthz" 2>/dev/null \
+"${COMPOSE[@]}" exec -T nginx wget -qO- "http://bot-webhook:3001/livez" 2>/dev/null \
   || echo "nginx не достучался до bot-webhook:3001"
 echo
