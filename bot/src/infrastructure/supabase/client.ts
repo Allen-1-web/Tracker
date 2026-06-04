@@ -1,4 +1,5 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import ws from 'ws'
 import { loadConfig } from '../config.js'
 import type { Database } from '../../domain/database.types.js'
 
@@ -22,6 +23,8 @@ export function getSupabaseAdmin(): SupabaseClient<Database> {
     global: {
       headers: { 'x-tracker-bot': 'service-role' },
     },
+    // Node 20 (Docker Alpine) has no native WebSocket — required by @supabase/realtime-js
+    realtime: { transport: ws as unknown as typeof WebSocket },
   })
 
   return cached
