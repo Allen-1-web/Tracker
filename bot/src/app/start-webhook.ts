@@ -58,7 +58,12 @@ async function bootstrap(): Promise<void> {
     redis,
   })
 
-  await registerTelegramWebhook({ bot, config, log })
+  try {
+    await registerTelegramWebhook({ bot, config, log })
+  } catch (err) {
+    // Не валим процесс: nginx может ещё не слушать HTTPS; healthz и UI должны подняться.
+    log.error({ err }, 'webhook: setWebhook failed — проверьте HTTPS и TELEGRAM_WEBHOOK_BASE_URL')
+  }
 
   const shutdown = async (signal: string): Promise<void> => {
     log.info({ signal }, 'webhook: shutting down')
