@@ -47,14 +47,14 @@ echo
 if [[ -n "${TELEGRAM_WEBHOOK_BASE_URL:-}" && -n "${TELEGRAM_WEBHOOK_PATH_SECRET:-}" && -n "${TELEGRAM_WEBHOOK_HEADER_SECRET:-}" ]]; then
   BASE="${TELEGRAM_WEBHOOK_BASE_URL%/}"
   URL="${BASE}/tg/webhook/${TELEGRAM_WEBHOOK_PATH_SECRET}"
-  echo "=== setWebhook → ${URL} ==="
+  echo "=== setWebhook → ${URL} (drop pending) ==="
   SET_BODY="$(python3 - <<PY
 import json, os
 print(json.dumps({
   "url": "${URL}",
   "secret_token": os.environ.get("TELEGRAM_WEBHOOK_HEADER_SECRET", ""),
   "allowed_updates": ["message", "callback_query"],
-  "drop_pending_updates": False,
+  "drop_pending_updates": True,
 }))
 PY
 )"
@@ -70,13 +70,28 @@ PY
   curl -sS "${API}/getWebhookInfo" | python3 -m json.tool 2>/dev/null || curl -sS "${API}/getWebhookInfo"
   echo
 
-  echo "=== HTTPS endpoint (POST test, ожидаем не 502/404) ==="
-  HTTPS_CODE="$(curl -sS -o /dev/null -w "%{http_code}" -X POST "${URL}" \
+  echo "=== POST напрямую на bot :3001 (минуя nginx) ==="
+  DIRECT_CODE="$(curl -sS -m 15 -o /dev/null -w "%{http_code}" -X POST \
+    "http://127.0.0.1:3001/tg/webhook/${TELEGRAM_WEBHOOK_PATH_SECRET}" \
     -H "Content-Type: application/json" \
     -H "X-Telegram-Bot-Api-Secret-Token: ${TELEGRAM_WEBHOOK_HEADER_SECRET}" \
-    -d '{"update_id":0}' 2>/dev/null || echo "000")"
+    -d '{"update_id":9001,"message":{"message_id":1,"date":1700000000,"chat":{"id":1,"type":"private"},"from":{"id":1,"is_bot":false,"first_name":"T"},"text":"/ping"}}' \
+    2>/dev/null || echo "000")"
+  echo "POST 127.0.0.1:3001 → HTTP ${DIRECT_CODE} (200/204 нормально)"
+  echo
+
+  echo "=== HTTPS endpoint (POST через nginx) ==="
+  HTTPS_CODE="$(curl -sS -m 15 -o /dev/null -w "%{http_code}" -X POST "${URL}" \
+    -H "Content-Type: application/json" \
+    -H "X-Telegram-Bot-Api-Secret-Token: ${TELEGRAM_WEBHOOK_HEADER_SECRET}" \
+    -d '{"update_id":9002,"message":{"message_id":2,"date":1700000000,"chat":{"id":1,"type":"private"},"from":{"id":1,"is_bot":false,"first_name":"T"},"text":"/ping"}}' \
+    2>/dev/null || echo "000")"
   echo "POST ${URL} → HTTP ${HTTPS_CODE}"
-  echo "(403/401/400 от бота — нормально; 502/000 — nginx не достучался до bot-webhook)"
+  echo "(502/000 — nginx→bot; 200 — цепочка работает; Telegram timeout — см. DNS AAAA / firewall Timeweb)"
+  echo
+
+  echo "=== DNS AAAA (если есть запись — удалите в Timeweb DNS) ==="
+  dig +short ptnway.ru AAAA 2>/dev/null || echo "(dig не установлен)"
   echo
 fi
 
