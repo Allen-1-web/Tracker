@@ -14,6 +14,14 @@
 | `backend/supabase/` | SQL: `schema.sql`, миграции, скрипты bootstrap admin |
 | `vite-legacy/` | Старая Vite-версия (опционально) |
 
+## Production (VPS / Docker)
+
+Полная инструкция: [`DEPLOY.md`](DEPLOY.md) (Timeweb Cloud, nginx, SSL, GitHub Actions).
+
+```bash
+npm run docker:prod:up   # docker-compose.prod.yml
+```
+
 ## Быстрый старт
 
 ```bash

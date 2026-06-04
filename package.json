@@ -1,0 +1,42 @@
+{
+  "name": "tracker",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "bot"
+  ],
+  "devDependencies": {
+    "@playwright/test": "^1.55.0",
+    "dotenv": "^16.6.1"
+  },
+  "scripts": {
+    "dev": "npm run dev --workspace frontend",
+    "dev:bot": "npm run dev --workspace bot",
+    "dev:worker": "npm run dev:worker --workspace bot",
+    "dev:webhook": "npm run dev:webhook --workspace bot",
+    "build": "npm run build --workspace frontend && npm run build --workspace bot",
+    "build:frontend": "npm run build --workspace frontend",
+    "build:bot": "npm run build --workspace bot",
+    "start": "npm run start --workspace frontend",
+    "start:bot": "npm run start --workspace bot",
+    "start:worker": "npm run start:worker --workspace bot",
+    "start:webhook": "npm run start:webhook --workspace bot",
+    "lint": "npm run lint --workspace frontend && npm run lint --workspace bot",
+    "typecheck": "npm run typecheck --workspace frontend && npm run typecheck --workspace bot",
+    "test": "npm run test --workspace bot && npm run test --workspace frontend",
+    "e2e": "playwright test",
+    "e2e:ui": "playwright test --ui",
+    "e2e:headed": "playwright test --headed",
+    "e2e:debug": "PWDEBUG=1 playwright test --headed",
+    "e2e:report": "playwright show-report",
+    "e2e:install": "playwright install --with-deps",
+    "docker:up": "docker compose up -d --build",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f",
+    "docker:prod:up": "docker compose -f docker-compose.prod.yml up -d --build",
+    "docker:prod:down": "docker compose -f docker-compose.prod.yml down",
+    "docker:prod:logs": "docker compose -f docker-compose.prod.yml logs -f",
+    "install:frontend": "npm install --workspace frontend",
+    "install:bot": "npm install --workspace bot"
+  }
+}

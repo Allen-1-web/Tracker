@@ -1,0 +1,74 @@
+# Production HTTPS config. After Let's Encrypt:
+#   1. cp deploy/nginx/conf.d/tracker.ssl.conf.example deploy/nginx/conf.d/tracker.ssl.conf
+#   2. rm deploy/nginx/conf.d/tracker.conf
+#   3. docker compose -f docker-compose.prod.yml exec nginx nginx -s reload
+#
+# Replace ptnway.ru with your domain.
+
+map $http_upgrade $connection_upgrade {
+  default upgrade;
+  '' close;
+}
+
+upstream tracker_frontend {
+  server frontend:3000;
+  keepalive 32;
+}
+
+upstream tracker_bot_webhook {
+  server bot-webhook:3001;
+  keepalive 8;
+}
+
+server {
+  listen 80;
+  listen [::]:80;
+  server_name ptnway.ru;
+
+  location /.well-known/acme-challenge/ {
+    root /var/www/certbot;
+  }
+
+  location / {
+    return 301 https://$host$request_uri;
+  }
+}
+
+server {
+  listen 443 ssl http2;
+  listen [::]:443 ssl http2;
+  server_name ptnway.ru;
+
+  ssl_certificate /etc/letsencrypt/live/ptnway.ru/fullchain.pem;
+  ssl_certificate_key /etc/letsencrypt/live/ptnway.ru/privkey.pem;
+  ssl_session_timeout 1d;
+  ssl_session_cache shared:SSL:10m;
+  ssl_protocols TLSv1.2 TLSv1.3;
+  ssl_prefer_server_ciphers off;
+
+  client_max_body_size 10m;
+
+  location /tg/ {
+    proxy_pass http://tracker_bot_webhook;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_read_timeout 30s;
+    client_max_body_size 1m;
+  }
+
+  location / {
+    proxy_pass http://tracker_frontend;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection $connection_upgrade;
+    proxy_cache_bypass $http_upgrade;
+    proxy_read_timeout 60s;
+  }
+}

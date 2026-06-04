@@ -1,0 +1,94 @@
+# Tracker bot — production stack (webhook + worker + Redis)
+#
+# Перед запуском:
+#   1. Скопируйте bot/.env.example → bot/.env и заполните секреты
+#   2. Для webhook: TELEGRAM_MODE=webhook, TELEGRAM_WEBHOOK_BASE_URL=https://your-domain
+#   3. docker compose up -d --build
+#
+# Порты:
+#   3001 — bot webhook + /healthz + /metrics
+#   3002 — worker /healthz + /metrics
+#   6379 — Redis (локально)
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: tracker-redis
+    restart: unless-stopped
+    ports:
+      - '6379:6379'
+    volumes:
+      - tracker_redis_data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  bot-webhook:
+    build:
+      context: .
+      dockerfile: bot/Dockerfile
+      target: webhook
+    container_name: tracker-bot-webhook
+    restart: unless-stopped
+    env_file:
+      - bot/.env
+    environment:
+      NODE_ENV: production
+      TELEGRAM_MODE: webhook
+      REDIS_URL: redis://redis:6379
+      HTTP_PORT: 3001
+      HTTP_HOST: 0.0.0.0
+    ports:
+      - '3001:3001'
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:3001/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  bot-worker:
+    build:
+      context: .
+      dockerfile: bot/Dockerfile
+      target: worker
+    container_name: tracker-bot-worker
+    restart: unless-stopped
+    env_file:
+      - bot/.env
+    environment:
+      NODE_ENV: production
+      REDIS_URL: redis://redis:6379
+      WORKER_HTTP_PORT: 3002
+      HTTP_HOST: 0.0.0.0
+    ports:
+      - '3002:3002'
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:3002/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+volumes:
+  tracker_redis_data:

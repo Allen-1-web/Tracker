@@ -1,0 +1,12 @@
+vite-legacy
+e2e
+docs
+**/node_modules
+.git
+**/.env
+!bot/.env.example
+!frontend/.env.example
+**/.next
+**/dist
+bot/dist
+frontend/.next

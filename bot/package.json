@@ -1,0 +1,50 @@
+{
+  "name": "@tracker/bot",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20.11"
+  },
+  "main": "dist/app/start-bot.js",
+  "scripts": {
+    "dev": "tsx watch src/app/start-bot.ts",
+    "dev:worker": "tsx watch src/app/start-worker.ts",
+    "dev:webhook": "tsx watch src/app/start-webhook.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/app/start-bot.js",
+    "start:worker": "node dist/app/start-worker.js",
+    "start:webhook": "node dist/app/start-webhook.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint . --ext .ts",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@grammyjs/conversations": "^2.0.1",
+    "@grammyjs/menu": "^1.3.0",
+    "@grammyjs/ratelimiter": "^1.2.1",
+    "@grammyjs/runner": "^2.0.3",
+    "@supabase/supabase-js": "^2.105.4",
+    "bullmq": "^5.34.0",
+    "cron-parser": "^4.9.0",
+    "dotenv": "^16.4.7",
+    "fastify": "^5.2.1",
+    "grammy": "^1.30.0",
+    "ioredis": "^5.4.2",
+    "luxon": "^3.5.0",
+    "pino": "^9.5.0",
+    "pino-pretty": "^13.0.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/luxon": "^3.4.2",
+    "@types/node": "^20.17.10",
+    "@typescript-eslint/eslint-plugin": "^8.18.2",
+    "@typescript-eslint/parser": "^8.18.2",
+    "eslint": "^9.17.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}

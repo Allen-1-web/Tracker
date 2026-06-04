@@ -1,3 +1,10 @@
+# Production secrets
+.env
+bot/.env
+frontend/.env.production
+deploy/local/
+!frontend/.env.production.example
+
 # Frontend (Next.js)
 frontend/node_modules/
 frontend/.next/

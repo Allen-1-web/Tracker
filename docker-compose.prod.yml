@@ -1,0 +1,155 @@
+# Production stack: nginx + Next.js + bot (webhook + worker) + Redis
+#
+# Before first run:
+#   1. cp frontend/.env.example frontend/.env.production
+#   2. cp bot/.env.example bot/.env
+#   3. Set SUPABASE_* and TELEGRAM_* in both; for compose build-args also add to repo root .env:
+#        SUPABASE_URL, SUPABASE_ANON_KEY, TELEGRAM_BOT_USERNAME
+#   4. Replace app.example.ru in deploy/nginx/conf.d/*.conf
+#   5. Start stack (HTTP bootstrap), then enable tracker.ssl.conf (see DEPLOY.md)
+#        docker compose -f docker-compose.prod.yml up -d --build
+
+name: tracker-prod
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: tracker-redis
+    restart: unless-stopped
+    command: ['redis-server', '--appendonly', 'yes']
+    volumes:
+      - tracker_redis_data:/data
+    networks:
+      - tracker_net
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+      args:
+        SUPABASE_URL: ${SUPABASE_URL:?Set SUPABASE_URL in repo root .env for build}
+        SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY:?Set SUPABASE_ANON_KEY in repo root .env for build}
+        TELEGRAM_BOT_USERNAME: ${TELEGRAM_BOT_USERNAME:-}
+    container_name: tracker-frontend
+    restart: unless-stopped
+    env_file:
+      - frontend/.env.production
+    environment:
+      NODE_ENV: production
+      HOSTNAME: 0.0.0.0
+      PORT: 3000
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - tracker_net
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:3000/').then(r=>process.exit(r.ok||r.status===307||r.status===308?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  bot-webhook:
+    build:
+      context: .
+      dockerfile: bot/Dockerfile
+      target: webhook
+    container_name: tracker-bot-webhook
+    restart: unless-stopped
+    env_file:
+      - bot/.env
+    environment:
+      NODE_ENV: production
+      TELEGRAM_MODE: webhook
+      REDIS_URL: redis://redis:6379
+      HTTP_PORT: 3001
+      HTTP_HOST: 0.0.0.0
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - tracker_net
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:3001/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  bot-worker:
+    build:
+      context: .
+      dockerfile: bot/Dockerfile
+      target: worker
+    container_name: tracker-bot-worker
+    restart: unless-stopped
+    env_file:
+      - bot/.env
+    environment:
+      NODE_ENV: production
+      REDIS_URL: redis://redis:6379
+      WORKER_HTTP_PORT: 3002
+      HTTP_HOST: 0.0.0.0
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - tracker_net
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:3002/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: tracker-nginx
+    restart: unless-stopped
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ./deploy/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./deploy/nginx/conf.d:/etc/nginx/conf.d:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - ./deploy/certbot/www:/var/www/certbot:ro
+    depends_on:
+      frontend:
+        condition: service_healthy
+      bot-webhook:
+        condition: service_healthy
+    networks:
+      - tracker_net
+
+networks:
+  tracker_net:
+    driver: bridge
+
+volumes:
+  tracker_redis_data:
