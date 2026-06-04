@@ -24,7 +24,14 @@ fi
 
 API="https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}"
 
-echo "=== docker compose ps (bot + nginx) ==="
+echo "=== nginx conf.d (должны быть только 00-upstreams.conf + tracker.ssl.conf) ==="
+ls -la "$ROOT/deploy/nginx/conf.d/" 2>/dev/null || true
+for extra in "$ROOT/deploy/nginx/conf.d/tracker.conf" "$ROOT/deploy/nginx/conf.d/"*.example; do
+  if [[ -f "$extra" ]]; then
+    echo "⚠ Удалите лишний конфиг: rm -f $extra"
+  fi
+done
+echo
 cd "$ROOT"
 "${COMPOSE[@]}" ps bot-webhook bot-worker nginx redis 2>/dev/null || true
 echo

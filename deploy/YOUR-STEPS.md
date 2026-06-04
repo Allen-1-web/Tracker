@@ -134,7 +134,7 @@ sudo certbot certonly --webroot -w /opt/tracker/deploy/certbot/www \
   --agree-tos -m ваш@email.ru --non-interactive
 
 cd /opt/tracker
-cp deploy/nginx/conf.d/tracker.ssl.conf.example deploy/nginx/conf.d/tracker.ssl.conf
+cp deploy/nginx/tracker.ssl.conf.example deploy/nginx/conf.d/tracker.ssl.conf
 rm deploy/nginx/conf.d/tracker.conf
 docker compose -f docker-compose.prod.yml up -d
 docker compose -f docker-compose.prod.yml exec nginx nginx -s reload
