@@ -1,24 +1,7 @@
-# Production HTTPS config. After Let's Encrypt:
-#   1. cp deploy/nginx/conf.d/tracker.ssl.conf.example deploy/nginx/conf.d/tracker.ssl.conf
-#   2. rm deploy/nginx/conf.d/tracker.conf
-#   3. docker compose -f docker-compose.prod.yml exec nginx nginx -s reload
-#
-# Replace ptnway.ru with your domain.
-
-map $http_upgrade $connection_upgrade {
-  default upgrade;
-  '' close;
-}
-
-upstream tracker_frontend {
-  server frontend:3000;
-  keepalive 32;
-}
-
-upstream tracker_bot_webhook {
-  server host.docker.internal:3001;
-  keepalive 8;
-}
+# Production HTTPS. After Let's Encrypt:
+#   cp deploy/nginx/conf.d/tracker.ssl.conf.example deploy/nginx/conf.d/tracker.ssl.conf
+#   rm deploy/nginx/conf.d/tracker.conf
+#   docker compose -f docker-compose.prod.yml up -d --force-recreate nginx
 
 server {
   listen 80;
@@ -49,7 +32,9 @@ server {
   client_max_body_size 10m;
 
   location /tg/ {
-    proxy_pass http://tracker_bot_webhook;
+    resolver 127.0.0.11 valid=10s ipv6=off;
+    set $bot_upstream host.docker.internal;
+    proxy_pass http://$bot_upstream:3001;
     proxy_http_version 1.1;
     proxy_set_header Host $host;
     proxy_set_header X-Real-IP $remote_addr;
