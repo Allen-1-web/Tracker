@@ -1,5 +1,7 @@
-# HTTP bootstrap — ptnway.ru (before SSL).
-# After certbot: cp tracker.ssl.conf.example → tracker.ssl.conf, then rm this file.
+# Production HTTPS. After Let's Encrypt:
+#   cp deploy/nginx/tracker.ssl.conf.example deploy/nginx/conf.d/tracker.ssl.conf
+#   rm -f deploy/nginx/conf.d/tracker.conf
+#   docker compose -f docker-compose.prod.yml up -d --force-recreate nginx
 
 server {
   listen 80;
@@ -10,8 +12,28 @@ server {
     root /var/www/certbot;
   }
 
+  location / {
+    return 301 https://$host$request_uri;
+  }
+}
+
+server {
+  listen 443 ssl;
+  listen [::]:443 ssl;
+  http2 on;
+  server_name ptnway.ru;
+
+  ssl_certificate /etc/letsencrypt/live/ptnway.ru/fullchain.pem;
+  ssl_certificate_key /etc/letsencrypt/live/ptnway.ru/privkey.pem;
+  ssl_session_timeout 1d;
+  ssl_session_cache shared:SSL:10m;
+  ssl_protocols TLSv1.2 TLSv1.3;
+  ssl_prefer_server_ciphers off;
+
+  client_max_body_size 10m;
+
   location /tg/ {
-    proxy_pass http://host.docker.internal:3001;
+    proxy_pass http://tracker_bot_webhook;
     proxy_http_version 1.1;
     proxy_set_header Host $host;
     proxy_set_header X-Real-IP $remote_addr;
