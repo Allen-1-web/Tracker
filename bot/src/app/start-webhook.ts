@@ -63,8 +63,33 @@ async function bootstrap(): Promise<void> {
   try {
     await registerTelegramWebhook({ bot, config, log })
   } catch (err) {
-    // Не валим процесс: nginx может ещё не слушать HTTPS; healthz и UI должны подняться.
     log.error({ err }, 'webhook: setWebhook failed — проверьте HTTPS и TELEGRAM_WEBHOOK_BASE_URL')
+    for (let attempt = 2; attempt <= 5; attempt++) {
+      await new Promise((r) => setTimeout(r, 10_000))
+      try {
+        await registerTelegramWebhook({ bot, config, log })
+        break
+      } catch (retryErr) {
+        log.error({ err: retryErr, attempt }, 'webhook: setWebhook retry failed')
+      }
+    }
+  }
+
+  try {
+    const info = await bot.api.getWebhookInfo()
+    if (!info.url) {
+      log.error(
+        { lastError: info.last_error_message ?? null },
+        'webhook: Telegram не знает URL — запустите deploy/scripts/telegram-webhook.sh на VPS',
+      )
+    } else if (info.last_error_message) {
+      log.warn(
+        { url: info.url, lastError: info.last_error_message, pending: info.pending_update_count },
+        'webhook: Telegram сообщает об ошибке доставки',
+      )
+    }
+  } catch (err) {
+    log.error({ err }, 'webhook: getWebhookInfo failed')
   }
 
   const shutdown = async (signal: string): Promise<void> => {
