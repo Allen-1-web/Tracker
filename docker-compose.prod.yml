@@ -69,10 +69,14 @@ services:
       target: webhook
     container_name: tracker-bot-webhook
     restart: unless-stopped
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     env_file:
       - bot/.env
     environment:
       NODE_ENV: production
+      NODE_OPTIONS: --dns-result-order=ipv4first
       TELEGRAM_MODE: webhook
       REDIS_URL: redis://redis:6379
       HTTP_PORT: 3001
@@ -102,10 +106,14 @@ services:
       target: worker
     container_name: tracker-bot-worker
     restart: unless-stopped
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     env_file:
       - bot/.env
     environment:
       NODE_ENV: production
+      NODE_OPTIONS: --dns-result-order=ipv4first
       TELEGRAM_MODE: polling
       REDIS_URL: redis://redis:6379
       WORKER_HTTP_PORT: 3002

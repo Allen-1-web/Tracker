@@ -73,6 +73,12 @@ PY
   echo
 fi
 
+echo "=== Telegram API from bot-webhook container ==="
+"${COMPOSE[@]}" exec -T bot-webhook node -e \
+  "fetch('https://api.telegram.org/bot'+process.env.TELEGRAM_BOT_TOKEN+'/getMe',{signal:AbortSignal.timeout(15000)}).then(r=>r.json()).then(j=>console.log(JSON.stringify(j,null,2))).catch(e=>console.error('FAIL',e.message))" \
+  2>/dev/null || echo "не удалось проверить api.telegram.org из контейнера"
+echo
+
 echo "=== bot health (node, inside container) ==="
 "${COMPOSE[@]}" exec -T bot-webhook node -e \
   "fetch('http://127.0.0.1:3001/livez').then(r=>r.text().then(t=>console.log('livez',r.status,t))).catch(e=>{console.error('FAIL',e.message);process.exit(1)})" \

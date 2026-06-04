@@ -1,5 +1,5 @@
 import { buildContainer } from './container.js'
-import { createBot, initBotWithTimeout, probeTelegramApi } from '../infrastructure/telegram/bot.js'
+import { createBot, initBotWithTimeout } from '../infrastructure/telegram/bot.js'
 import { createRedisConnection } from '../infrastructure/redis/client.js'
 import {
   attachWebhookRoute,
@@ -45,7 +45,6 @@ async function bootstrap(): Promise<void> {
   })
   log.info('redis: connection OK')
 
-  // Слушаем порт до bot.init() — иначе nginx → 502, пока init висит.
   const app = await createBotHttpServerBase({
     config,
     log,
@@ -53,46 +52,29 @@ async function bootstrap(): Promise<void> {
     redis,
   })
 
-  log.info('telegram: probing API (getMe)...')
-  await probeTelegramApi(config.telegram.token)
-  log.info('telegram: API OK')
-
   const bot = createBot(container)
-  await initBotWithTimeout(bot, log)
-
   attachWebhookRoute({ app, bot, config, log })
 
-  try {
-    await registerTelegramWebhook({ bot, config, log })
-  } catch (err) {
-    log.error({ err }, 'webhook: setWebhook failed — проверьте HTTPS и TELEGRAM_WEBHOOK_BASE_URL')
-    for (let attempt = 2; attempt <= 5; attempt++) {
-      await new Promise((r) => setTimeout(r, 10_000))
-      try {
-        await registerTelegramWebhook({ bot, config, log })
-        break
-      } catch (retryErr) {
-        log.error({ err: retryErr, attempt }, 'webhook: setWebhook retry failed')
+  // init + setWebhook в фоне: из Docker api.telegram.org иногда недоступен,
+  // а webhook URL уже можно регистрировать с хоста (deploy/scripts/telegram-webhook.sh).
+  void (async () => {
+    try {
+      await initBotWithTimeout(bot, log, 30_000)
+      await registerTelegramWebhook({ bot, config, log })
+      const info = await bot.api.getWebhookInfo()
+      if (info.last_error_message) {
+        log.warn(
+          { url: info.url, lastError: info.last_error_message, pending: info.pending_update_count },
+          'webhook: Telegram сообщает об ошибке доставки',
+        )
       }
-    }
-  }
-
-  try {
-    const info = await bot.api.getWebhookInfo()
-    if (!info.url) {
+    } catch (err) {
       log.error(
-        { lastError: info.last_error_message ?? null },
-        'webhook: Telegram не знает URL — запустите deploy/scripts/telegram-webhook.sh на VPS',
-      )
-    } else if (info.last_error_message) {
-      log.warn(
-        { url: info.url, lastError: info.last_error_message, pending: info.pending_update_count },
-        'webhook: Telegram сообщает об ошибке доставки',
+        { err },
+        'telegram: background init/setWebhook failed — если бот молчит, выполните: bash deploy/scripts/telegram-webhook.sh',
       )
     }
-  } catch (err) {
-    log.error({ err }, 'webhook: getWebhookInfo failed')
-  }
+  })()
 
   const shutdown = async (signal: string): Promise<void> => {
     log.info({ signal }, 'webhook: shutting down')

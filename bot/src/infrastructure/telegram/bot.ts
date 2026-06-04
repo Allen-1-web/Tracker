@@ -44,9 +44,3 @@ export async function initBotWithTimeout(
   ])
   log.info({ bot: bot.botInfo.username }, 'bot: initialized')
 }
-
-/** Быстрая проверка Telegram API до загрузки middleware (диагностика). */
-export async function probeTelegramApi(token: string): Promise<void> {
-  const probe = new Bot(token, { client: { timeoutSeconds: TELEGRAM_API_TIMEOUT_SEC } })
-  await probe.init()
-}
