@@ -1,7 +1,8 @@
 # syntax=docker/dockerfile:1
 # Build from repository root: docker build -f frontend/Dockerfile .
+# Debian-based image: Tailwind v4 / lightningcss native bindings fail on Alpine musl.
 
-FROM node:20-alpine AS base
+FROM node:20-bookworm-slim AS base
 WORKDIR /app
 COPY package.json package-lock.json ./
 COPY frontend/package.json ./frontend/
@@ -19,12 +20,12 @@ ENV NODE_ENV=production \
 COPY frontend ./frontend
 RUN npm run build --workspace frontend
 
-FROM node:20-alpine AS runtime
+FROM node:20-bookworm-slim AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
 ENV HOSTNAME=0.0.0.0
 ENV PORT=3000
-RUN addgroup -g 1001 -S nodejs && adduser -S nextjs -u 1001
+RUN groupadd -g 1001 nodejs && useradd -u 1001 -g nodejs -m nextjs
 COPY --from=build /app/frontend/public ./frontend/public
 COPY --from=build --chown=nextjs:nodejs /app/frontend/.next/standalone ./
 COPY --from=build --chown=nextjs:nodejs /app/frontend/.next/static ./frontend/.next/static
