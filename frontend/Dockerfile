@@ -18,6 +18,9 @@ ENV NODE_ENV=production \
     SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY} \
     TELEGRAM_BOT_USERNAME=${TELEGRAM_BOT_USERNAME}
 COPY frontend ./frontend
+# Rebuild native CSS bindings for Linux (lockfile may come from Windows dev machine).
+RUN npm rebuild @tailwindcss/oxide lightningcss --workspace frontend 2>/dev/null || true
+ENV NODE_OPTIONS=--max-old-space-size=1536
 RUN npm run build --workspace frontend
 
 FROM node:20-bookworm-slim AS runtime
