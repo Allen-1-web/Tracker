@@ -1,3 +1,4 @@
+import { initSentry, captureException } from '../instrumentation/sentry.js'
 import { buildContainer } from './container.js'
 import { createBot, initBotWithTimeout } from '../infrastructure/telegram/bot.js'
 import { createRedisConnection } from '../infrastructure/redis/client.js'
@@ -5,6 +6,8 @@ import {
   createAndListenBotHttpServer,
   registerTelegramWebhook,
 } from '../infrastructure/http/server.js'
+
+initSentry('bot-webhook')
 
 /**
  * Production entry-point: Fastify webhook + /healthz + /metrics.
@@ -90,6 +93,7 @@ async function bootstrap(): Promise<void> {
 }
 
 bootstrap().catch((err) => {
+  captureException(err)
   // eslint-disable-next-line no-console
   console.error('FATAL: webhook bootstrap failed', err)
   process.exit(1)

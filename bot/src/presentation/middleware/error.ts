@@ -1,6 +1,7 @@
 import { GrammyError, HttpError } from 'grammy'
 import type { ErrorHandler } from 'grammy'
 import { BotError, isBotError } from '../../domain/errors.js'
+import { captureException } from '../../instrumentation/sentry.js'
 import type { AppContext } from '../context.js'
 
 /**
@@ -27,6 +28,7 @@ export function makeErrorHandler(): ErrorHandler<AppContext> {
     }
     if (error instanceof GrammyError) {
       log.error?.({ ...meta, err: error }, 'telegram-api-error')
+      captureException(error, meta)
       // если бот не может писать (заблокирован) — молча
       if (error.error_code === 403) return
       await safeReply(ctx, 'Telegram API недоступен. Попробуйте ещё раз.')
@@ -34,9 +36,11 @@ export function makeErrorHandler(): ErrorHandler<AppContext> {
     }
     if (error instanceof HttpError) {
       log.error?.({ ...meta, err: error }, 'telegram-network-error')
+      captureException(error, meta)
       return
     }
     log.error?.({ ...meta, err: error }, 'unhandled-error')
+    captureException(error, meta)
     await safeReply(ctx, 'Что-то пошло не так. Попробуйте позже.')
   }
 }

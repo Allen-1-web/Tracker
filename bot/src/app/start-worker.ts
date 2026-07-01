@@ -1,3 +1,4 @@
+import { initSentry, captureException } from '../instrumentation/sentry.js'
 import { Bot } from 'grammy'
 import { buildContainer } from './container.js'
 import { createRedisConnection } from '../infrastructure/redis/client.js'
@@ -9,8 +10,9 @@ import {
 import { REMINDER_JOB_SCHEDULER_TICK } from '../infrastructure/queue/constants.js'
 import { createOpsHttpServer } from '../infrastructure/http/ops-server.js'
 
-/**
- * BullMQ worker: due-напоминания + автоматические дайджесты (Stage 4–5).
+initSentry('bot-worker')
+
+/** * BullMQ worker: due-напоминания + автоматические дайджесты (Stage 4–5).
  *
  * Запуск:
  *   npm run dev:worker
@@ -76,6 +78,7 @@ async function bootstrap(): Promise<void> {
 }
 
 bootstrap().catch((err) => {
+  captureException(err)
   // eslint-disable-next-line no-console
   console.error('FATAL: worker bootstrap failed', err)
   process.exit(1)

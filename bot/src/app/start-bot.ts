@@ -1,6 +1,9 @@
+import { initSentry, captureException } from '../instrumentation/sentry.js'
 import { run, type RunnerHandle } from '@grammyjs/runner'
 import { buildContainer } from './container.js'
 import { createBot } from '../infrastructure/telegram/bot.js'
+
+initSentry('bot-polling')
 
 /**
  * Long-polling entry-point бота.
@@ -70,8 +73,7 @@ async function bootstrap(): Promise<void> {
 }
 
 bootstrap().catch((err) => {
-  // если контейнер ещё не собран — упадём прежде чем получим логгер
-  // (loadConfig прокинет понятную Zod-ошибку в stderr)
+  captureException(err)
   // eslint-disable-next-line no-console
   console.error('FATAL: bot bootstrap failed', err)
   process.exit(1)
