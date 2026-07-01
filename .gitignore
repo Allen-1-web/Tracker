@@ -40,3 +40,4 @@ e2e/.env.e2e
 e2e/playwright-report/
 e2e/test-results/
 e2e/.auth/
+node_modules
